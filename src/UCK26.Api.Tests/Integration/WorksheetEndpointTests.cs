@@ -37,6 +37,30 @@ public class WorksheetEndpointTests
     }
 
     [Test]
+    public async Task Get_AsAdmin_WithUserId_ReturnsSelectedUserWorksheet()
+    {
+        await using var factory = new TestWebApplicationFactory()
+            .AuthenticateAs("admin", 1, "Admin");
+        using var client = factory.CreateClient();
+
+        var createUser = await client.PostAsJsonAsync("/api/users", new
+        {
+            userName = "worker",
+            password = "Worker!2026",
+            role = "User"
+        });
+        var createdUser = await createUser.Content.ReadFromJsonAsync<JsonElement>();
+        var userId = createdUser.GetProperty("id").GetInt32();
+
+        var response = await client.GetAsync($"/api/worksheets?year=2026&month=5&userId={userId}");
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var worksheet = await response.Content.ReadFromJsonAsync<JsonElement>();
+        await Assert.That(worksheet.GetProperty("userId").GetInt32()).IsEqualTo(userId);
+        await Assert.That(worksheet.GetProperty("userName").GetString()).IsEqualTo("worker");
+    }
+
+    [Test]
     public async Task PostEntry_AsUser_CreatesEntry()
     {
         await using var factory = new TestWebApplicationFactory()

@@ -6,7 +6,7 @@ namespace UCK26.Api.Endpoints;
 
 public record WorksheetDto(int Id, int UserId, string UserName, int Year, int Month, List<WorkEntryDto> Entries);
 public record WorkEntryDto(int Id, DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string Description, decimal Hours);
-public record CreateWorkEntryRequest(DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string? Description);
+public record CreateWorkEntryRequest(DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string? Description, int? UserId);
 public record UpdateWorkEntryRequest(TimeOnly Start, TimeOnly End, string? Description);
 
 public static class WorksheetEndpoints
@@ -20,11 +20,12 @@ public static class WorksheetEndpoints
         group.MapGet("/", async (
             int year,
             int month,
+            int? userId,
             ClaimsPrincipal principal,
             AppDbContext db,
             CancellationToken ct) =>
         {
-            if (!TryGetUser(principal, out var userId, out var userName))
+            if (!TryGetUser(principal, out var currentUserId, out var currentUserName, out var isAdmin))
             {
                 return Results.Unauthorized();
             }
@@ -34,7 +35,13 @@ public static class WorksheetEndpoints
                 return Results.BadRequest(new { error = "Year and month are required." });
             }
 
-            var worksheet = await GetOrCreateWorksheet(db, userId, userName, year, month, ct);
+            var targetUser = await GetTargetUser(db, currentUserId, currentUserName, isAdmin, userId, ct);
+            if (targetUser is null)
+            {
+                return Results.NotFound();
+            }
+
+            var worksheet = await GetOrCreateWorksheet(db, targetUser.Value.Id, targetUser.Value.UserName, year, month, ct);
             return Results.Ok(ToDto(worksheet));
         });
 
@@ -44,7 +51,7 @@ public static class WorksheetEndpoints
             AppDbContext db,
             CancellationToken ct) =>
         {
-            if (!TryGetUser(principal, out var userId, out var userName))
+            if (!TryGetUser(principal, out var currentUserId, out var currentUserName, out var isAdmin))
             {
                 return Results.Unauthorized();
             }
@@ -54,7 +61,13 @@ public static class WorksheetEndpoints
                 return Results.BadRequest(new { error = "Date, type, start and end are required." });
             }
 
-            var worksheet = await GetOrCreateWorksheet(db, userId, userName, body.Date.Year, body.Date.Month, ct);
+            var targetUser = await GetTargetUser(db, currentUserId, currentUserName, isAdmin, body.UserId, ct);
+            if (targetUser is null)
+            {
+                return Results.NotFound();
+            }
+
+            var worksheet = await GetOrCreateWorksheet(db, targetUser.Value.Id, targetUser.Value.UserName, body.Date.Year, body.Date.Month, ct);
             var entry = new WorkEntry
             {
                 WorksheetId = worksheet.Id,
@@ -77,7 +90,7 @@ public static class WorksheetEndpoints
             AppDbContext db,
             CancellationToken ct) =>
         {
-            if (!TryGetUser(principal, out var userId, out _))
+            if (!TryGetUser(principal, out var userId, out _, out var isAdmin))
             {
                 return Results.Unauthorized();
             }
@@ -89,7 +102,7 @@ public static class WorksheetEndpoints
 
             var entry = await db.WorkEntries
                 .Include(e => e.Worksheet)
-                .FirstOrDefaultAsync(e => e.Id == id && e.Worksheet.UserId == userId, ct);
+                .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.Worksheet.UserId == userId), ct);
             if (entry is null)
             {
                 return Results.NotFound();
@@ -109,14 +122,14 @@ public static class WorksheetEndpoints
             AppDbContext db,
             CancellationToken ct) =>
         {
-            if (!TryGetUser(principal, out var userId, out _))
+            if (!TryGetUser(principal, out var userId, out _, out var isAdmin))
             {
                 return Results.Unauthorized();
             }
 
             var entry = await db.WorkEntries
                 .Include(e => e.Worksheet)
-                .FirstOrDefaultAsync(e => e.Id == id && e.Worksheet.UserId == userId, ct);
+                .FirstOrDefaultAsync(e => e.Id == id && (isAdmin || e.Worksheet.UserId == userId), ct);
             if (entry is null)
             {
                 return Results.NotFound();
@@ -183,15 +196,37 @@ public static class WorksheetEndpoints
             entry.Description,
             (decimal)(entry.End - entry.Start).TotalHours);
 
-    private static bool TryGetUser(ClaimsPrincipal principal, out int userId, out string userName)
+    private static bool TryGetUser(ClaimsPrincipal principal, out int userId, out string userName, out bool isAdmin)
     {
         var idClaim = principal.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)
             ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
         userName = principal.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Name)
             ?? principal.Identity?.Name
             ?? "";
+        isAdmin = principal.IsInRole(UserRoles.Admin);
 
         return int.TryParse(idClaim, out userId) && !string.IsNullOrWhiteSpace(userName);
+    }
+
+    private static async Task<(int Id, string UserName)?> GetTargetUser(
+        AppDbContext db,
+        int currentUserId,
+        string currentUserName,
+        bool isAdmin,
+        int? requestedUserId,
+        CancellationToken ct)
+    {
+        if (!isAdmin || requestedUserId is null || requestedUserId == currentUserId)
+        {
+            return (currentUserId, currentUserName);
+        }
+
+        var target = await db.Users
+            .Where(u => u.Id == requestedUserId)
+            .Select(u => new { u.Id, u.UserName })
+            .FirstOrDefaultAsync(ct);
+
+        return target is null ? null : (target.Id, target.UserName);
     }
 
     private static bool IsValidMonth(int year, int month) =>
