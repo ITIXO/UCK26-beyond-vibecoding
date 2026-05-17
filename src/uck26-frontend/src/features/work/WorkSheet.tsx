@@ -13,12 +13,12 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Separator,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
   Table,
   TableBody,
   TableCell,
@@ -27,7 +27,7 @@ import {
   TableRow,
   Textarea,
 } from "@itixo/component-library";
-import { ChevronLeft, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useUsers } from "@/features/users/users.queries";
 import { type WorkEntryDto, WorkEntryType } from "@/shared/lib/api/worksheets.contracts.api";
@@ -83,7 +83,7 @@ export function WorkSheet() {
       map.set(entry.date, [...(map.get(entry.date) ?? []), entry]);
     });
     return map;
-  }, [worksheetQuery.data]);
+  }, [worksheetQuery.data?.entries]);
   const totalsByType = useMemo(() => {
     const map = new Map<WorkEntryType, number>();
     entryTypes.forEach((type) => map.set(type, 0));
@@ -91,7 +91,7 @@ export function WorkSheet() {
       map.set(entry.type, (map.get(entry.type) ?? 0) + entry.hours);
     });
     return map;
-  }, [worksheetQuery.data]);
+  }, [worksheetQuery.data?.entries]);
 
   function shiftMonth(delta: number) {
     const next = new Date(year, month - 1 + delta, 1);
@@ -218,7 +218,7 @@ export function WorkSheet() {
         )}
 
         {worksheetQuery.data && (
-          <Table className="min-w-[940px]">
+          <Table className="min-w-235">
             <TableHeader>
               <TableRow>
                 <TableHead className="sticky left-0 z-20 w-32 bg-gray-50">Date</TableHead>
@@ -227,7 +227,6 @@ export function WorkSheet() {
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
-                <TableHead className="w-20 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -256,22 +255,17 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
-                    <TableCell className="text-right">
-                      <IconButton variant="ghost" size="sm" aria-label={`History for ${day.label}`}>
-                        <History className="size-4"/>
-                      </IconButton>
-                    </TableCell>
                   </TableRow>
                 );
               })}
-              <TableRow className="bg-gray-50 font-medium" data-test-id="work-summary-row">
-                <TableCell className="sticky left-0 z-10 w-32 bg-gray-50">
+              <TableRow className="bg-blue-50 font-medium" data-test-id="work-summary-row">
+                <TableCell className="sticky left-0 z-10 w-32 bg-blue-50">
                   Summary
                 </TableCell>
-                <TableCell className="sticky left-32 z-10 w-24 bg-gray-50" />
-                <TableCell className="sticky left-56 z-10 w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" />
+                <TableCell className="sticky left-32 z-10 w-24 bg-blue-50" />
+                <TableCell className="sticky left-56 z-10 w-24 bg-blue-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" />
                 {entryTypes.map((type) => (
-                  <TableCell key={type} className="tabular-nums" data-test-id={`work-summary-${type}`}>
+                  <TableCell key={type} className="tabular-nums font-bold" data-test-id={`work-summary-${type}`}>
                     {formatHours(totalsByType.get(type) ?? 0)}
                   </TableCell>
                 ))}
