@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(u => u.PasswordHash).IsRequired();
             e.Property(u => u.Role).IsRequired().HasMaxLength(32);
             e.HasIndex(u => u.UserName).IsUnique();
+            e.HasData(SeedData.AdminUser);
         });
 
         modelBuilder.Entity<Worksheet>(e =>
@@ -40,4 +41,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(w => new { w.WorksheetId, w.Date, w.Type }).IsUnique();
         });
     }
+}
+
+public static class SeedData
+{
+    public const string AdminUserName = "admin";
+    public const string AdminPassword = "Demo!2026";
+    public const string AdminPasswordHash = "seed:Demo!2026";
+
+    public static readonly User AdminUser = new()
+    {
+        Id = 1,
+        UserName = AdminUserName,
+        PasswordHash = AdminPasswordHash,
+        Role = UserRoles.Admin,
+        CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+    };
 }

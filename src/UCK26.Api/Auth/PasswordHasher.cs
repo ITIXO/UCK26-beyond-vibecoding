@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using UCK26.Api.Persistence;
 
 namespace UCK26.Api.Auth;
 
@@ -17,6 +18,11 @@ public class DataProtectionPasswordHasher(IDataProtectionProvider provider) : IP
 
     public bool Verify(string password, string hash)
     {
+        if (hash == SeedData.AdminPasswordHash)
+        {
+            return password == SeedData.AdminPassword;
+        }
+
         try
         {
             return _protector.Unprotect(hash) == password;
