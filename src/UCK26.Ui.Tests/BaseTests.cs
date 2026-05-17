@@ -27,11 +27,16 @@ public abstract class BaseTests
         }
     }
 
-    protected static async Task<IBrowserContext> CreateBrowserContextAsync(bool headless = true)
+    protected static async Task<IBrowserContext> CreateBrowserContextAsync(bool headless = true, bool recordVideo = false)
     {
         var playwright = await Playwright.CreateAsync();
         var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = headless });
-        return await browser.NewContextAsync();
+        var contextOptions = recordVideo ? new BrowserNewContextOptions
+        {
+            RecordVideoDir = "videos/",
+            RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 }
+        } : null;
+        return await browser.NewContextAsync(contextOptions);
     }
 
     protected static async Task<IBrowserContext> CreateAuthenticatedAdminContextAsync(bool headless = true)

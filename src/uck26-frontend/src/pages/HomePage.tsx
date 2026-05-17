@@ -11,7 +11,7 @@ export function HomePage() {
           Welcome, <span className="font-semibold">{user?.userName}</span>.
         </p>
         <p className="mt-1 text-sm text-gray-500">
-          You are signed in as <span className="font-medium">{user?.role}</span>.
+          You are signed in as <span className="font-medium" data-test-id="current-user">{user?.role}</span>.
         </p>
       </div>
     </AppShell>

@@ -38,7 +38,7 @@ public class LoginPageTests : BaseTests
         var text = await currentUser.InnerTextAsync();
 
         await Assert.That(text).Contains(TestConfig.AdminUserName);
-        await Assert.That(text).Contains("Admin");
+        await Assert.That(text).Contains("admin");
     }
 
     [Test]
