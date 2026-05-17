@@ -84,6 +84,14 @@ export function WorkSheet() {
     });
     return map;
   }, [worksheetQuery.data]);
+  const totalsByType = useMemo(() => {
+    const map = new Map<WorkEntryType, number>();
+    entryTypes.forEach((type) => map.set(type, 0));
+    worksheetQuery.data?.entries.forEach((entry) => {
+      map.set(entry.type, (map.get(entry.type) ?? 0) + entry.hours);
+    });
+    return map;
+  }, [worksheetQuery.data]);
 
   function shiftMonth(delta: number) {
     const next = new Date(year, month - 1 + delta, 1);
@@ -256,6 +264,19 @@ export function WorkSheet() {
                   </TableRow>
                 );
               })}
+              <TableRow className="bg-gray-50 font-medium" data-test-id="work-summary-row">
+                <TableCell className="sticky left-0 z-10 w-32 bg-gray-50">
+                  Summary
+                </TableCell>
+                <TableCell className="sticky left-32 z-10 w-24 bg-gray-50" />
+                <TableCell className="sticky left-56 z-10 w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" />
+                {entryTypes.map((type) => (
+                  <TableCell key={type} className="tabular-nums" data-test-id={`work-summary-${type}`}>
+                    {formatHours(totalsByType.get(type) ?? 0)}
+                  </TableCell>
+                ))}
+                <TableCell />
+              </TableRow>
             </TableBody>
           </Table>
         )}

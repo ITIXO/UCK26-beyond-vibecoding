@@ -51,6 +51,7 @@ public class WorkPageTests : BaseTests
         await Assert.That(await page.Locator($"[data-test-id='work-start-{key}']").InnerTextAsync()).IsEqualTo("08:15");
         await Assert.That(await page.Locator($"[data-test-id='work-end-{key}']").InnerTextAsync()).IsEqualTo("10:45");
         await Assert.That(await page.Locator($"[data-test-id='work-cell-{key}-work']").InnerTextAsync()).Contains("02:30");
+        await Assert.That(await page.Locator("[data-test-id='work-summary-work']").IsVisibleAsync()).IsTrue();
     }
 
     [Test]
