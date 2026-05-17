@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { AuthenticatedLayout, Badge } from "@itixo/component-library";
 import type { IRoute } from "@itixo/component-library";
-import { UserCog } from "lucide-react";
+import { CalendarDays, UserCog } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Role } from "@/shared/lib/api/users.contracts.api.ts";
 
@@ -15,19 +15,30 @@ export function AppShell({ title, children }: Props) {
   const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const sidebarRoutes: IRoute[] | undefined = isAdmin
-    ? [
-        {
-          id: 1,
-          name: "Users",
-          icon: <UserCog className="size-4" />,
-          isActive: location.pathname === "/users",
-          agenda: "Users",
-          path: "/users",
-          roles: [Role.Admin],
-        },
-      ]
-    : undefined;
+  const sidebarRoutes: IRoute[] = [
+    {
+      id: 1,
+      name: "Work",
+      icon: <CalendarDays className="size-4" />,
+      isActive: location.pathname === "/work",
+      agenda: "Work",
+      path: "/work",
+      roles: [Role.User, Role.Admin],
+    },
+    ...(isAdmin
+      ? [
+          {
+            id: 2,
+            name: "Users",
+            icon: <UserCog className="size-4" />,
+            isActive: location.pathname === "/users",
+            agenda: "Users",
+            path: "/users",
+            roles: [Role.Admin],
+          },
+        ]
+      : []),
+  ];
 
   function handleLogout() {
     logout();

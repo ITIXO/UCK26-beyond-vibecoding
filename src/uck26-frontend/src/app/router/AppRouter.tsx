@@ -3,6 +3,7 @@ import { RequireAuth } from "@/features/auth/RequireAuth";
 import { HomePage } from "@/pages/HomePage";
 import { LoginPage } from "@/pages/LoginPage";
 import { UsersPage } from "@/pages/UsersPage";
+import { WorkPage } from "@/pages/WorkPage";
 import { Role } from "@/shared/lib/api/users.contracts.api.ts";
 
 export function AppRouter() {
@@ -14,6 +15,14 @@ export function AppRouter() {
         element={
           <RequireAuth>
             <HomePage/>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/work"
+        element={
+          <RequireAuth>
+            <WorkPage/>
           </RequireAuth>
         }
       />

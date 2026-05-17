@@ -17,4 +17,4 @@ export interface UpdateUserRequest {
   password?: string;
 }
 
-export enum Role { Admin = "admin", User = "user" }
+export enum Role { Admin = "Admin", User = "User" }
