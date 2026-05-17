@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "react-router";
-import { Button } from "@itixo/component-library";
+import { Link, useLocation, useNavigate } from "react-router";
+import { AuthenticatedLayout } from "@itixo/component-library";
+import type { IRoute } from "@itixo/component-library";
+import { UserCog } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 
 interface Props {
@@ -10,7 +12,21 @@ interface Props {
 
 export function AppShell({ title, children }: Props) {
   const { user, isAdmin, logout } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  const sidebarRoutes: IRoute[] | undefined = isAdmin
+    ? [
+        {
+          id: 1,
+          name: "UserManagement",
+          icon: <UserCog className="size-4" />,
+          isActive: location.pathname === "/users",
+          agenda: "UserManagement",
+          path: "/users",
+          roles: ["Admin"],
+        },
+      ]
+    : undefined;
 
   function handleLogout() {
     logout();
@@ -18,39 +34,23 @@ export function AppShell({ title, children }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-base font-semibold">
-              UCK26
-            </Link>
-            <nav className="flex items-center gap-4 text-sm text-gray-600">
-              <Link to="/" className="hover:text-gray-900">
-                Home
-              </Link>
-              {isAdmin && (
-                <Link to="/users" className="hover:text-gray-900">
-                  Users
-                </Link>
-              )}
-            </nav>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span data-test-id="current-user" className="text-gray-600">
-              {user?.userName} · {user?.role}
-            </span>
-            <Button data-test-id="logout-button" size="sm" variant="outline" onClick={handleLogout}>
-              Sign out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <AuthenticatedLayout
+      userName={user?.userName ?? ""}
+      signOut={handleLogout}
+      sidebarRoutes={sidebarRoutes}
+      currentRoute={location.pathname}
+      agendas={[]}
+      LinkComponent={Link}
+      NavbarActions={
+        <span data-test-id="current-user" className="text-sm text-muted-foreground">
+          {user?.userName} · {user?.role}
+        </span>
+      }
+    >
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="mb-4 text-2xl font-semibold">{title}</h1>
         {children}
       </main>
-    </div>
+    </AuthenticatedLayout>
   );
 }

@@ -1,9 +1,8 @@
-import { Link } from "react-router";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AppShell } from "@/shared/ui/AppShell";
 
 export function HomePage() {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
 
   return (
     <AppShell title="Home">
@@ -14,15 +13,6 @@ export function HomePage() {
         <p className="mt-1 text-sm text-gray-500">
           You are signed in as <span className="font-medium">{user?.role}</span>.
         </p>
-
-        {isAdmin && (
-          <Link
-            to="/users"
-            className="mt-4 inline-flex rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-gray-700"
-          >
-            Manage users
-          </Link>
-        )}
       </div>
     </AppShell>
   );

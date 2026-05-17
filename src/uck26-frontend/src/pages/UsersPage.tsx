@@ -3,7 +3,7 @@ import { AppShell } from "@/shared/ui/AppShell";
 
 export function UsersPage() {
   return (
-    <AppShell title="Users">
+    <AppShell title="UserManagement">
       <UserList />
     </AppShell>
   );
