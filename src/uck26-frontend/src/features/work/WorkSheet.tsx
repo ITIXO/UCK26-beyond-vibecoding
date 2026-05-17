@@ -14,6 +14,11 @@ import {
   PopoverContent,
   PopoverTrigger,
   Separator,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -23,6 +28,8 @@ import {
   Textarea,
 } from "@itixo/component-library";
 import { ChevronLeft, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { useUsers } from "@/features/users/users.queries";
 import { type WorkEntryDto, WorkEntryType } from "@/shared/lib/api/worksheets.contracts.api";
 import { useCreateWorkEntry, useDeleteWorkEntry, useUpdateWorkEntry, useWorksheet } from "./worksheets.queries";
 
@@ -48,16 +55,26 @@ type DialogState =
   | { mode: "edit"; entry: WorkEntryDto };
 
 export function WorkSheet() {
+  const { user, isAdmin } = useAuth();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [pickerYear, setPickerYear] = useState(year);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>(user?.id);
 
-  const worksheetQuery = useWorksheet(year, month);
-  const createEntry = useCreateWorkEntry(year, month);
-  const updateEntry = useUpdateWorkEntry(year, month);
-  const deleteEntry = useDeleteWorkEntry(year, month);
+  const usersQuery = useUsers({ enabled: isAdmin });
+  const worksheetUserId = isAdmin ? selectedUserId : undefined;
+  const worksheetQuery = useWorksheet(year, month, worksheetUserId);
+  const createEntry = useCreateWorkEntry(year, month, worksheetUserId);
+  const updateEntry = useUpdateWorkEntry(year, month, worksheetUserId);
+  const deleteEntry = useDeleteWorkEntry(year, month, worksheetUserId);
+
+  useEffect(() => {
+    if (selectedUserId === undefined && user?.id !== undefined) {
+      setSelectedUserId(user.id);
+    }
+  }, [selectedUserId, user?.id]);
 
   const days = useMemo(() => buildDays(year, month), [year, month]);
   const entriesByDate = useMemo(() => {
@@ -87,9 +104,30 @@ export function WorkSheet() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold tracking-normal" data-test-id="work-title">
-          {worksheetQuery.data?.userName ?? "Work"}
-        </h1>
+        {isAdmin ? (
+          <div className="w-full max-w-xs">
+            <Label className="mb-1">User</Label>
+            <Select
+              value={selectedUserId?.toString() ?? ""}
+              onValueChange={(value) => setSelectedUserId(Number(value))}
+            >
+              <SelectTrigger data-test-id="work-user-selector">
+                <SelectValue placeholder="Select user" />
+              </SelectTrigger>
+              <SelectContent>
+                {(usersQuery.data ?? []).map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.userName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <h1 className="text-2xl font-semibold tracking-normal" data-test-id="work-title">
+            {worksheetQuery.data?.userName ?? "Work"}
+          </h1>
+        )}
 
         <div className="flex items-center gap-2">
           <IconButton variant="outline" size="sm" onClick={() => shiftMonth(-1)} aria-label="Previous month">
@@ -230,7 +268,7 @@ export function WorkSheet() {
         onSubmit={async (body) => {
           if (!dialog) return;
           if (dialog.mode === "create") {
-            await createEntry.mutateAsync({ date: dialog.date, type: dialog.type, ...body });
+            await createEntry.mutateAsync({ date: dialog.date, type: dialog.type, userId: worksheetUserId, ...body });
           } else {
             await updateEntry.mutateAsync({ id: dialog.entry.id, body });
           }
@@ -259,32 +297,36 @@ function EntryCell({
   if (entries.length === 0) {
     return (
       <div className="flex h-9 min-w-44 items-center">
-        <IconButton variant="ghost" size="sm" aria-label={`Add ${type} entry`} onClick={onCreate} data-test-id={`work-add-${date}-${type}`}>
-          <Plus className="size-4"/>
+        <IconButton variant="ghost" size="sm" aria-label={`Add ${type} entry`} onClick={onCreate} data-test-id={`work-add-${date}-${type}`}
+          className="text-green-500 hover:text-green-600">
+          <Plus/>
         </IconButton>
       </div>
     );
   }
 
-  const summary = (
+  return (
     <div className="flex h-9 min-w-44 items-center justify-between gap-2" data-test-id={`work-cell-${date}-${type}`}>
       <div className="flex items-center gap-2">
         <Badge variant="secondary">{entries.length}</Badge>
         <span className="tabular-nums">{formatHours(entries.reduce((sum, entry) => sum + entry.hours, 0))}</span>
       </div>
       <div className="flex items-center gap-1">
-        <IconButton variant="ghost" size="sm" aria-label={`Add ${type} entry`} onClick={onCreate} data-test-id={`work-add-${date}-${type}`}>
-          <Plus className="size-3 text-color-green-500 hover:text-color-green-600"/>
+        <IconButton variant="ghost" size="mini" aria-label={`Add ${type} entry`} onClick={onCreate} data-test-id={`work-add-${date}-${type}`}
+                    className="text-green-500 hover:text-green-600">
+          <Plus/>
         </IconButton>
         <Separator orientation="vertical" className="h-5"/>
         {entries.length === 1 ? (
           <>
-            <IconButton variant="ghost" size="sm" aria-label={`Edit ${type} entry`} onClick={() => onEdit(entries[0])}>
-              <Pencil className="size-3"/>
+            <IconButton variant="ghost" size="mini" aria-label={`Edit ${type} entry`} onClick={() => onEdit(entries[0])}
+                        className="text-blue-500 hover:text-blue-600">
+              <Pencil/>
             </IconButton>
             <Separator orientation="vertical" className="h-5"/>
-            <IconButton variant="ghost" size="sm" aria-label={`Delete ${type} entry`} onClick={() => onDelete(entries[0])}>
-              <Trash2 className="size-3"/>
+            <IconButton variant="ghost" size="mini" aria-label={`Delete ${type} entry`} onClick={() => onDelete(entries[0])}
+                        className="text-red-500 hover:text-red-600">
+              <Trash2/>
             </IconButton>
           </>
         ) : (
@@ -297,8 +339,6 @@ function EntryCell({
       </div>
     </div>
   );
-
-  return summary;
 }
 
 function RecordPicker({

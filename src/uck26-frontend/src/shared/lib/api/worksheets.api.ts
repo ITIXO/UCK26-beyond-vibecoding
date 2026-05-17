@@ -1,8 +1,10 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "./api";
 import type { CreateWorkEntryRequest, UpdateWorkEntryRequest, WorkEntryDto, WorksheetDto } from "./worksheets.contracts.api";
 
-export const getWorksheet = (year: number, month: number) =>
-  apiGet<WorksheetDto>(`/api/worksheets?year=${year}&month=${month}`);
+export const getWorksheet = (year: number, month: number, userId?: number) => {
+  const userQuery = userId === undefined ? "" : `&userId=${userId}`;
+  return apiGet<WorksheetDto>(`/api/worksheets?year=${year}&month=${month}${userQuery}`);
+};
 
 export const createWorkEntry = (body: CreateWorkEntryRequest) =>
   apiPost<WorkEntryDto>("/api/worksheets/entries", body);

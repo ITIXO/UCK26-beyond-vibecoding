@@ -9,10 +9,11 @@ import type { CreateUserRequest, UpdateUserRequest } from "@/shared/lib/api/user
 
 const usersKey = ["users"] as const;
 
-export function useUsers() {
+export function useUsers(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: usersKey,
     queryFn: listUsers,
+    enabled: options?.enabled,
   });
 }
 

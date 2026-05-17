@@ -34,6 +34,8 @@ public class WorkPageTests : BaseTests
         await page.GotoAsync(TestConfig.Route("/work"));
         await page.Locator("[data-test-id='work-sheet']").WaitForAsync(
             new LocatorWaitForOptions { Timeout = 10_000 });
+        await page.Locator("[data-test-id='work-user-selector']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 10_000 });
 
         var key = date.ToString("yyyy-MM-dd");
         await page.Locator($"[data-test-id='work-add-{key}-work']").ClickAsync();

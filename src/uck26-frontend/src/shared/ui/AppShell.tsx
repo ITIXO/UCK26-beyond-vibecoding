@@ -60,7 +60,7 @@ export function AppShell({ title, children }: Props) {
       agendas={[]}
       LinkComponent={Link}
     >
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-6">
         {title && (<h1 className="mb-4 text-2xl font-semibold">{title}</h1>)}
         {children}
       </main>

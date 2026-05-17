@@ -23,6 +23,7 @@ export interface CreateWorkEntryRequest {
   start: string;
   end: string;
   description: string;
+  userId?: number;
 }
 
 export interface UpdateWorkEntryRequest {
