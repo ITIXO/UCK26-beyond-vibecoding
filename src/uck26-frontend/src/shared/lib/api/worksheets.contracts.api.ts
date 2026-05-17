@@ -11,13 +11,24 @@ export interface WorkEntryDto {
   id: number;
   date: string;
   type: WorkEntryType;
+  start: string;
+  end: string;
+  description: string;
   hours: number;
 }
 
-export interface UpsertWorkEntryRequest {
+export interface CreateWorkEntryRequest {
   date: string;
   type: WorkEntryType;
-  hours: number;
+  start: string;
+  end: string;
+  description: string;
+}
+
+export interface UpdateWorkEntryRequest {
+  start: string;
+  end: string;
+  description: string;
 }
 
 export enum WorkEntryType {

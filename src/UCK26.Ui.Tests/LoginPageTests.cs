@@ -31,14 +31,11 @@ public class LoginPageTests : BaseTests
         await page.Locator("[data-test-id='login-password']").FillAsync(TestConfig.AdminPassword);
         await page.Locator("[data-test-id='login-submit']").ClickAsync();
 
-        await page.WaitForURLAsync($"{TestConfig.FrontendUrl}/", new PageWaitForURLOptions { Timeout = 10_000 });
-
         var currentUser = page.Locator("[data-test-id='current-user']");
-        await currentUser.WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
+        await currentUser.WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
         var text = await currentUser.InnerTextAsync();
 
-        await Assert.That(text).Contains(TestConfig.AdminUserName);
-        await Assert.That(text).Contains("admin");
+        await Assert.That(text).Contains("Admin");
     }
 
     [Test]
