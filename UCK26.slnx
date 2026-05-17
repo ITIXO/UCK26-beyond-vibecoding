@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+  </Configurations>
+  <Project Path="src/UCK26.Api/UCK26.Api.csproj" />
+  <Project Path="src/UCK26.Api.Tests/UCK26.Api.Tests.csproj" />
+  <Project Path="src/UCK26.Ui.Tests/UCK26.Ui.Tests.csproj" />
+</Solution>
