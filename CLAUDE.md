@@ -8,24 +8,24 @@ Behavioral guidelines for AI agents in this repo. **Conference demo project** �
 
 Before implementing:
 
-- State assumptions explicit. Uncertain → ask.
-- Multiple interpretations exist → present them, don't pick silently.
-- Simpler approach exists → say so. Push back when warranted.
-- Unclear → stop. Name what's confusing. Ask.
+- State assumptions explicit. Uncertain -> ask.
+- Multiple interpretations exist -> present them, don't pick silently.
+- Simpler approach exists -> say so. Push back when warranted.
+- Unclear -> stop. Name what's confusing. Ask.
 
 ## 2. Simplicity First
 
 **Minimum code that solves problem. Nothing speculative.**
 
-Repo is **scaffold for a talk**, not a product. Reach for simplest thing that works:
+Repo is **scaffold for talk**, not product. Reach for simplest thing that works:
 
 - No features beyond what was asked.
 - No abstractions for single-use code.
 - No "flexibility" or "configurability" demo does not need.
 - No defensive error handling for impossible scenarios.
-- 200 lines when 50 works → rewrite.
+- 200 lines when 50 works -> rewrite.
 
-Senior engineer would call it overcomplicated → simplify.
+Senior engineer would call it overcomplicated -> simplify.
 
 ## 3. Surgical Changes
 
@@ -42,27 +42,27 @@ Test: every changed line traces direct to user's request.
 
 **Define success criteria. Loop until verified.**
 
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
+- "Add validation" -> "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" -> "Write test that reproduces it, then make it pass"
+- "Refactor X" -> "Ensure tests pass before and after"
 
-Multi-step tasks → state brief plan before starting.
+Multi-step tasks -> state brief plan before starting.
 
 ---
 
 ## 5. Documenting sessions
 
-- Problem handled in Claude Cowork + user asks for documents → always create new folder per session. Folder named kebab-case, shortly describes session problem, placed in `documents` folder. Example: `jwt-login-flow`.
-- Developer handover docs → `*.handover.md`. Example: `jwt-login-handover.md`.
-- UX/UI design docs → interactive html `*.handover.html`. Example: `jwt-login-handover.html`.
-- Architecture decision record → `*.adr.md`. Example: `jwt-login-adr.md`.
+- Problem handled in Claude Cowork + user asks for documents -> always create new folder per session. Folder named kebab-case, shortly describes session problem, placed in `documents` folder. Example: `jwt-login-flow`.
+- Developer handover docs -> `*.handover.md`. Example: `jwt-login-handover.md`.
+- UX/UI design docs -> interactive HTML `*.handover.html`. Example: `jwt-login-handover.html`.
+- Architecture decision record -> `*.adr.md`. Example: `jwt-login-adr.md`.
 - Final step: always use /compress skill to reduce created documents. Delete `*.original.md`. Example `CLAUDE.original.md`.
 
 ## 6. GitHub issues
 
-- Vague issue → ask for clarification before starting.
-- New issue → assess size/complexity, assign correct type. Types: Feature, Task, Bug.
-- New issue has sub issues → always assign type Feature.
+- Vague issue -> ask for clarification before starting.
+- New issue -> assess size/complexity, assign correct type. Types: Feature, Task, Bug.
+- New issue has sub issues -> always assign type Feature.
 - Feature must have sub issues of at least type Task.
 - Feature must have sub issue to update docs (README.md, AGENTS.md, CLAUDE.md).
 - Feature must have sub issue to add tests (unit, integration, UI) if applicable.
@@ -70,7 +70,7 @@ Multi-step tasks → state brief plan before starting.
 - Design Feature sub issues for maximum parallelism.
 - Ensure issue and sub issues correctly linked.
 - Never create new labels.
-- Sub issue blocks another → assign via correct relationship.
+- Sub issue blocks another -> assign via correct relationship.
 
 ## Project-Specific Guidelines
 
@@ -81,33 +81,34 @@ Multi-step tasks → state brief plan before starting.
 
 ### Project Overview
 
-**UCK26 — Beyond Vibecoding** — small full-stack demo app shown live at UCK26 talk. Two screens — login page + admin-only user list. Local JWT auth (no Azure, no SSO).
+**UCK26 — Beyond Vibecoding** — small full-stack demo app shown live at UCK26 talk. Local JWT auth, admin user management, monthly work tracking. No Azure, SSO, CI, Docker, production deployment.
 
 ### Tech Stack
 
 #### Backend
 
-- **.NET 10** / **C#** — Backend framework
-- **ASP.NET Core Minimal API** — HTTP layer (route groups, not controllers, not FastEndpoints)
-- **Entity Framework Core 10** with **SQLite** — single-file persistence
-- **JWT Bearer** auth (`Microsoft.AspNetCore.Authentication.JwtBearer`)
-- **ASP.NET Core Data Protection** — password protection (`IDataProtectionProvider`, keys persisted to `./dataprotection-keys`). Hardcoded purpose `UCK26.Api.Passwords.v1`. Not a one-way hash — encrypt/decrypt + compare.
-- **Scalar.AspNetCore** — Scalar API docs at `/scalar`
+- **.NET 10** / **C#** — backend framework.
+- **ASP.NET Core Minimal API** — HTTP layer. Route groups, not controllers, not FastEndpoints.
+- **Entity Framework Core 10** with **SQLite** — single-file persistence, migrations applied via `db.Database.MigrateAsync()` at startup.
+- **JWT Bearer** auth (`Microsoft.AspNetCore.Authentication.JwtBearer`).
+- **ASP.NET Core Data Protection** — password protection (`IDataProtectionProvider`, keys persisted to `./dataprotection-keys`). Hardcoded purpose `UCK26.Api.Passwords.v1`. Not one-way hash — encrypt/decrypt + compare. Seed admin uses `seed:Demo!2026`.
+- **Scalar.AspNetCore** — Scalar API docs at `/scalar` in development.
 
 #### Tests
 
-- **TUnit** — unit + integration runner (Microsoft.Testing.Platform)
-- **Microsoft.AspNetCore.Mvc.Testing** — `WebApplicationFactory<Program>` for backend integration tests
-- **Microsoft.Playwright** — UI tests (Chromium); auth handled by hitting `/api/auth/login` directly + injecting JWT into `localStorage` via `addInitScript`
+- **TUnit** — unit + integration runner (Microsoft.Testing.Platform).
+- **Microsoft.AspNetCore.Mvc.Testing** — `WebApplicationFactory<Program>` for backend integration tests.
+- **Microsoft.Playwright** — UI tests (Chromium); auth handled by hitting `/api/auth/login` directly + injecting JWT into `localStorage` via `addInitScript`.
 
 #### Frontend
 
-- **React 19** + **Vite** + **TypeScript** (`strict: true`)
-- **React Router 7** — client-side routing
-- **@tanstack/react-query** — server state
-- **Tailwind CSS v4**
-- **@itixo/component-library** — internal component library
-- **i18next** *not* used in demo; copy inline English.
+- **React 19** + **Vite** + **TypeScript** (`strict: true`).
+- **React Router 7** — client-side routing.
+- **@tanstack/react-query** — server state.
+- **Tailwind CSS v4**.
+- **@itixo/component-library** — internal component library.
+- **lucide-react** — icons.
+- **i18next** not used; copy inline English.
 
 ### Solution Structure
 
@@ -116,15 +117,16 @@ src/
 ├── UCK26.Api/                          # Backend (.NET 10 Minimal API)
 │   ├── Auth/
 │   │   ├── JwtTokenService.cs          # Issues JWTs
-│   │   ├── PasswordHasher.cs           # DataProtection-based protector
+│   │   ├── PasswordHasher.cs           # DataProtection password protector + seed fallback
 │   │   └── AuthOptions.cs              # Bound to "Jwt" section
 │   ├── Endpoints/
 │   │   ├── AuthEndpoints.cs            # /api/auth/* route group
-│   │   └── UserEndpoints.cs            # /api/users/* route group (Admin only)
+│   │   ├── UserEndpoints.cs            # /api/users/* route group (Admin only)
+│   │   └── WorksheetEndpoints.cs       # /api/worksheets/* route group
 │   ├── Persistence/
-│   │   ├── AppDbContext.cs             # EF Core DbContext
-│   │   ├── User.cs                     # Single entity
-│   │   └── DbSeeder.cs                 # Hardcodes admin on first run
+│   │   ├── AppDbContext.cs             # EF Core DbContext + seed data
+│   │   ├── User.cs                     # User, Worksheet, WorkEntry entities
+│   │   └── Migrations/                 # EF Core migrations
 │   ├── Program.cs                      # Composition root
 │   ├── appsettings.json
 │   └── UCK26.Api.csproj
@@ -135,17 +137,19 @@ src/
 │   │   └── TestWebApplicationFactory.cs# WebApplicationFactory<Program> with SQLite temp file + TestAuth
 │   ├── Integration/
 │   │   ├── AuthEndpointTests.cs
-│   │   └── UserEndpointTests.cs
+│   │   ├── UserEndpointTests.cs
+│   │   └── WorksheetEndpointTests.cs
 │   └── Unit/
 │       └── PasswordHasherTests.cs
 │
 ├── UCK26.Ui.Tests/                     # UI tests (TUnit + Playwright)
 │   ├── BaseTests.cs                    # Browser bootstrap + admin auth helper
-│   ├── AuthSetup.cs                    # POST /api/auth/login → cached JWT
+│   ├── AuthSetup.cs                    # POST /api/auth/login -> cached JWT
 │   ├── PlaywrightSetup.cs              # `playwright install chromium` on first run
 │   ├── TestConfig.cs                   # Frontend/API URLs + admin creds via env vars
 │   ├── LoginPageTests.cs
-│   └── UsersPageTests.cs
+│   ├── UsersPageTests.cs
+│   └── WorkPageTests.cs
 │
 └── uck26-frontend/                     # React 19 SPA
     ├── src/
@@ -157,16 +161,26 @@ src/
     │   │   │   ├── AuthProvider.tsx    # JWT + useAuth() hook
     │   │   │   ├── RequireAuth.tsx
     │   │   │   └── LoginForm.tsx
-    │   │   └── users/
-    │   │       ├── UserList.tsx
-    │   │       └── users.queries.ts
+    │   │   ├── users/
+    │   │   │   ├── UserList.tsx
+    │   │   │   └── users.queries.ts
+    │   │   └── work/
+    │   │       ├── WorkSheet.tsx
+    │   │       └── worksheets.queries.ts
     │   ├── pages/
+    │   │   ├── HomePage.tsx
     │   │   ├── LoginPage.tsx
-    │   │   └── UsersPage.tsx
+    │   │   ├── UsersPage.tsx
+    │   │   └── WorkPage.tsx
     │   ├── shared/lib/api/
     │   │   ├── api.ts                  # fetch wrapper + token injection
     │   │   ├── auth.api.ts
-    │   │   └── users.api.ts
+    │   │   ├── auth.contracts.api.ts
+    │   │   ├── users.api.ts
+    │   │   ├── users.contracts.api.ts
+    │   │   ├── worksheets.api.ts
+    │   │   └── worksheets.contracts.api.ts
+    │   ├── shared/ui/AppShell.tsx
     │   ├── app.css                     # Tailwind entry
     │   └── main.tsx
     ├── index.html
@@ -181,7 +195,7 @@ src/
 # Backend
 cd src/UCK26.Api
 dotnet run                    # http://localhost:5080
-dotnet ef migrations add Name # if you change the model
+dotnet ef migrations add Name # after model changes
 dotnet ef database update
 
 # Frontend
@@ -189,7 +203,7 @@ cd src/uck26-frontend
 npm install
 npm run dev                   # http://localhost:3000
 npm run build
-npm run lint
+npm run lint                  # TypeScript check via tsc -b --noEmit
 
 # Backend tests (unit + integration)
 dotnet run --project src/UCK26.Api.Tests
@@ -205,29 +219,31 @@ dotnet run --project src/UCK26.Ui.Tests
 
 ### Authentication & Authorization
 
-- Backend issue JWTs signed HS256 using `Jwt:SigningKey`. Claims: `sub` (user id), `name` (username), `role`.
-- Frontend POST `{ userName, password }` to `/api/auth/login`, store returned `accessToken` in `localStorage` under `uck26.token`, attach as `Authorization: Bearer <token>` on every API call.
-- **Roles:** `Admin`, `User`. Only `Admin` hit `/api/users/*`.
-- Admin account **hardcoded via seed** (`Seed:AdminUserName`, `Seed:AdminPassword` in `appsettings.json`). On first startup `DbSeeder` insert admin if absent.
-- Passwords stored as Data Protection ciphertext (not hashed). `DataProtectionPasswordHasher` creates protector with hardcoded purpose `UCK26.Api.Passwords.v1`. Keys persist to `./dataprotection-keys` (gitignored). Wipe folder → all stored passwords become unverifiable; delete `uck26.db` to reseed.
+- Backend issues JWTs signed HS256 using `Jwt:SigningKey`. Claims: `sub` (user id), `name` (username), `role`.
+- Frontend POSTs `{ userName, password }` to `/api/auth/login`, stores `accessToken` in `localStorage` under `uck26.token`, attaches `Authorization: Bearer <token>` on API calls.
+- **Roles:** `Admin`, `User`. Only `Admin` hits `/api/users/*`. `/api/worksheets/*` requires logged-in user; admin may pass `userId` to view/edit another user's worksheet.
+- Admin account seeded by EF data in `AppDbContext`: `admin` / `Demo!2026`, password hash `seed:Demo!2026`.
+- Passwords for created/updated users stored as Data Protection ciphertext. Keys persist to `./dataprotection-keys` (gitignored). Wipe keys -> protected passwords unverifiable; delete `uck26.db` to reseed.
 
 ### Database
 
-- One entity: `User { Id, UserName, PasswordHash, Role, CreatedAt }`.
-- SQLite file (`uck26.db`) next to API binary. Delete file to reset.
-- Migrations live in `src/UCK26.Api/Persistence/Migrations/` if/when needed; for one-entity demo, rely on `db.Database.EnsureCreated()` instead.
+- Entities: `User`, `Worksheet`, `WorkEntry`.
+- `Worksheet` unique per `{ UserId, Year, Month }`, cascades delete to entries.
+- `WorkEntry.Type`: `work`, `holiday`, `doctor`. `End` must be after `Start`.
+- SQLite file: `uck26.db` next to API working directory/binary depending run context. Delete file to reset.
+- Migrations live in `src/UCK26.Api/Persistence/Migrations/`; startup applies with `MigrateAsync()`.
 
 ### Code Conventions
 
 #### C# (.NET Backend)
 
-- `async`/`await` with `*Async` suffix; always pass `CancellationToken` where framework provides one.
+- `async`/`await` with `*Async` suffix; pass `CancellationToken` where framework provides one.
 - Nullable reference types enabled.
 - File-scoped namespaces.
 - Prefer primary constructors for DI.
 - Prefer `record` for request/response DTOs.
 - No comment narration — descriptive names instead.
-- Endpoints live in `Endpoints/` as `IEndpointRouteBuilder` extension methods (`MapAuth()`, `MapUsers()`). Keep route group set-up flat — no abstractions until demo grows.
+- Endpoints live in `Endpoints/` as `IEndpointRouteBuilder` extension methods (`MapAuth()`, `MapUsers()`, `MapWorksheets()`). Keep route group setup flat.
 
 #### TypeScript / React
 
@@ -236,47 +252,53 @@ dotnet run --project src/UCK26.Ui.Tests
 - Explicit types for function params + return types.
 - Tailwind utility classes — no inline `style={}` unless dynamic.
 - Components from `@itixo/component-library` first; build bespoke only when library lacks one.
-- API contracts colocated in `shared/lib/api/<feature>.api.ts`.
+- Icons from `lucide-react`.
+- API contracts colocated in `shared/lib/api/<feature>.contracts.api.ts`; API calls in `<feature>.api.ts`.
 - No comment narration.
 
 #### API Design
 
-- Routes versioned by prefix `/api/`. No `/api/v1/` for demo — keep short.
-- Standard HTTP codes: 200/201/204/400/401/403/404.
-- Authorization with `.RequireAuthorization("Admin")` policy on users group.
+- Routes prefixed `/api/`; no `/api/v1/` for demo.
+- Standard HTTP codes: 200/201/204/400/401/403/404/409.
+- Authorization via `.RequireAuthorization()` or `.RequireAuthorization("Admin")` on groups.
+- Keep request/response records in same endpoint file until real duplication appears.
 
 ### Common Tasks
 
-#### Add a Minimal API endpoint
+#### Add Minimal API endpoint
 
 1. Open relevant `*Endpoints.cs` in `src/UCK26.Api/Endpoints/`.
-2. Add `group.MapGet/Post/...("path", handler)` line.
+2. Add `group.MapGet/Post/...("path", handler)`.
 3. Attach `.RequireAuthorization("Admin")` if admin-only.
-4. Define request/response as records in same file (keep close to handler).
+4. Define request/response records in same file.
+5. Add focused integration test in `src/UCK26.Api.Tests/Integration/`.
 
-#### Add a frontend page
+#### Add frontend page
 
-1. Create `src/features/<feature>/...` (component + queries).
-2. Add `pages/<Name>Page.tsx` that composes feature.
-3. Register route in `src/app/router/AppRouter.tsx`. Wrap in `<RequireAuth role="Admin" />` for admin pages.
+1. Create `src/uck26-frontend/src/features/<feature>/...` component + query hooks.
+2. Create `src/uck26-frontend/src/pages/<Name>Page.tsx` composing feature and `AppShell`.
+3. Register route in `src/uck26-frontend/src/app/router/AppRouter.tsx`.
+4. Wrap with `<RequireAuth />` or `<RequireAuth role={Role.Admin} />`.
+5. Add Playwright coverage when page has user-facing workflow.
 
 #### Database changes
 
-1. Edit `src/UCK26.Api/Persistence/User.cs` (or add new entity).
-2. Update `AppDbContext` if needed.
-3. Demo: delete `uck26.db`, let `EnsureCreated()` re-make it. Migrations: `dotnet ef migrations add <Name>` then `dotnet ef database update`.
+1. Edit `src/UCK26.Api/Persistence/User.cs` or add entity file.
+2. Update `AppDbContext`.
+3. Add migration: `dotnet ef migrations add <Name>`.
+4. Run backend tests. Delete local `uck26.db` if old local schema blocks manual demo.
 
 ### Testing conventions
 
-- TUnit for everything (unit, integration, UI). `[Test]` attribute. `await Assert.That(...).IsEqualTo(...)`.
-- Backend integration tests use `TestWebApplicationFactory` which swaps SQLite to a temp file per factory + replaces JWT auth with `TestAuthHandler` so tests set the principal directly (no real JWT round-trip needed except for the dedicated login tests).
-- UI tests bootstrap by hitting `/api/auth/login` once (HTTP), caching the JWT, then injecting it into `localStorage` via Playwright's `addInitScript` before the page loads. The dedicated `LoginPageTests` still go through the form to cover the login UX path.
-- UI elements located via `data-test-id` — **never by text, title, label, or role**. Add `data-test-id` to anything tested.
+- TUnit for unit, integration, UI. `[Test]`; `await Assert.That(...).IsEqualTo(...)`.
+- Backend integration tests use `TestWebApplicationFactory`: temp SQLite file per factory + `TestAuthHandler` principal injection. Dedicated login tests use real login path.
+- UI tests hit `/api/auth/login` once, cache JWT, inject into `localStorage` through Playwright `addInitScript`. `LoginPageTests` still cover form path.
+- UI elements located via `data-test-id` — never text/title/label/role. Add `data-test-id` to anything tested.
 - Every new page needs at least one Playwright test.
 
 ### Out of scope for demo
 
-- Azure / Entra ID / MSAL — explicitly removed.
-- Refresh tokens, password reset emails, MFA — out of scope.
+- Azure / Entra ID / MSAL.
+- Refresh tokens, password reset emails, MFA.
 - Multi-tenancy, role hierarchy beyond `Admin` / `User`.
-- Docker, nginx, CI — out of scope (`Dockerfile`/`nginx.conf` at repo root are vestiges of earlier README-only stub, not wired up).
+- Docker, nginx, CI, production deploy.
