@@ -5,8 +5,9 @@ using UCK26.Api.Persistence;
 namespace UCK26.Api.Endpoints;
 
 public record WorksheetDto(int Id, int UserId, string UserName, int Year, int Month, List<WorkEntryDto> Entries);
-public record WorkEntryDto(int Id, DateOnly Date, string Type, decimal Hours);
-public record UpsertWorkEntryRequest(DateOnly Date, string Type, decimal Hours);
+public record WorkEntryDto(int Id, DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string Description, decimal Hours);
+public record CreateWorkEntryRequest(DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string? Description);
+public record UpdateWorkEntryRequest(TimeOnly Start, TimeOnly End, string? Description);
 
 public static class WorksheetEndpoints
 {
@@ -37,8 +38,8 @@ public static class WorksheetEndpoints
             return Results.Ok(ToDto(worksheet));
         });
 
-        group.MapPut("/entries", async (
-            UpsertWorkEntryRequest body,
+        group.MapPost("/entries", async (
+            CreateWorkEntryRequest body,
             ClaimsPrincipal principal,
             AppDbContext db,
             CancellationToken ct) =>
@@ -50,41 +51,80 @@ public static class WorksheetEndpoints
 
             if (!IsValidEntry(body))
             {
-                return Results.BadRequest(new { error = "Date, type and non-negative hours are required." });
+                return Results.BadRequest(new { error = "Date, type, start and end are required." });
             }
 
             var worksheet = await GetOrCreateWorksheet(db, userId, userName, body.Date.Year, body.Date.Month, ct);
-            var entry = worksheet.Entries.FirstOrDefault(e => e.Date == body.Date && e.Type == body.Type);
-
-            if (body.Hours == 0)
+            var entry = new WorkEntry
             {
-                if (entry is not null)
-                {
-                    db.WorkEntries.Remove(entry);
-                    await db.SaveChangesAsync(ct);
-                }
-
-                return Results.NoContent();
-            }
-
-            if (entry is null)
-            {
-                entry = new WorkEntry
-                {
-                    WorksheetId = worksheet.Id,
-                    Date = body.Date,
-                    Type = body.Type,
-                    Hours = body.Hours
-                };
-                db.WorkEntries.Add(entry);
-            }
-            else
-            {
-                entry.Hours = body.Hours;
-            }
+                WorksheetId = worksheet.Id,
+                Date = body.Date,
+                Type = body.Type,
+                Start = body.Start,
+                End = body.End,
+                Description = body.Description?.Trim() ?? ""
+            };
+            db.WorkEntries.Add(entry);
 
             await db.SaveChangesAsync(ct);
-            return Results.Ok(new WorkEntryDto(entry.Id, entry.Date, entry.Type, entry.Hours));
+            return Results.Created($"/api/worksheets/entries/{entry.Id}", ToDto(entry));
+        });
+
+        group.MapPut("/entries/{id:int}", async (
+            int id,
+            UpdateWorkEntryRequest body,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            CancellationToken ct) =>
+        {
+            if (!TryGetUser(principal, out var userId, out _))
+            {
+                return Results.Unauthorized();
+            }
+
+            if (!IsValidTimeRange(body.Start, body.End))
+            {
+                return Results.BadRequest(new { error = "End must be after start." });
+            }
+
+            var entry = await db.WorkEntries
+                .Include(e => e.Worksheet)
+                .FirstOrDefaultAsync(e => e.Id == id && e.Worksheet.UserId == userId, ct);
+            if (entry is null)
+            {
+                return Results.NotFound();
+            }
+
+            entry.Start = body.Start;
+            entry.End = body.End;
+            entry.Description = body.Description?.Trim() ?? "";
+
+            await db.SaveChangesAsync(ct);
+            return Results.Ok(ToDto(entry));
+        });
+
+        group.MapDelete("/entries/{id:int}", async (
+            int id,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            CancellationToken ct) =>
+        {
+            if (!TryGetUser(principal, out var userId, out _))
+            {
+                return Results.Unauthorized();
+            }
+
+            var entry = await db.WorkEntries
+                .Include(e => e.Worksheet)
+                .FirstOrDefaultAsync(e => e.Id == id && e.Worksheet.UserId == userId, ct);
+            if (entry is null)
+            {
+                return Results.NotFound();
+            }
+
+            db.WorkEntries.Remove(entry);
+            await db.SaveChangesAsync(ct);
+            return Results.NoContent();
         });
 
         return app;
@@ -129,8 +169,19 @@ public static class WorksheetEndpoints
             worksheet.Entries
                 .OrderBy(e => e.Date)
                 .ThenBy(e => e.Type)
-                .Select(e => new WorkEntryDto(e.Id, e.Date, e.Type, e.Hours))
+                .ThenBy(e => e.Start)
+                .Select(ToDto)
                 .ToList());
+
+    private static WorkEntryDto ToDto(WorkEntry entry) =>
+        new(
+            entry.Id,
+            entry.Date,
+            entry.Type,
+            entry.Start,
+            entry.End,
+            entry.Description,
+            (decimal)(entry.End - entry.Start).TotalHours);
 
     private static bool TryGetUser(ClaimsPrincipal principal, out int userId, out string userName)
     {
@@ -146,8 +197,10 @@ public static class WorksheetEndpoints
     private static bool IsValidMonth(int year, int month) =>
         year is >= 2000 and <= 2100 && month is >= 1 and <= 12;
 
-    private static bool IsValidEntry(UpsertWorkEntryRequest body) =>
+    private static bool IsValidEntry(CreateWorkEntryRequest body) =>
         body.Type is WorkEntryTypes.Work or WorkEntryTypes.Holiday or WorkEntryTypes.Doctor
-        && body.Hours >= 0
+        && IsValidTimeRange(body.Start, body.End)
         && IsValidMonth(body.Date.Year, body.Date.Month);
+
+    private static bool IsValidTimeRange(TimeOnly start, TimeOnly end) => end > start;
 }

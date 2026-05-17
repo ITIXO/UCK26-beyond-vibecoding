@@ -37,8 +37,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasKey(w => w.Id);
             e.Property(w => w.Type).IsRequired().HasMaxLength(32);
-            e.Property(w => w.Hours).HasPrecision(5, 2);
-            e.HasIndex(w => new { w.WorksheetId, w.Date, w.Type }).IsUnique();
+            e.Property(w => w.Description).IsRequired().HasMaxLength(256);
+            e.HasIndex(w => new { w.WorksheetId, w.Date, w.Type });
         });
     }
 }

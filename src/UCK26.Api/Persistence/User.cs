@@ -32,7 +32,9 @@ public class WorkEntry
     public Worksheet Worksheet { get; set; } = null!;
     public DateOnly Date { get; set; }
     public required string Type { get; set; }
-    public decimal Hours { get; set; }
+    public TimeOnly Start { get; set; }
+    public TimeOnly End { get; set; }
+    public string Description { get; set; } = "";
 }
 
 public static class WorkEntryTypes

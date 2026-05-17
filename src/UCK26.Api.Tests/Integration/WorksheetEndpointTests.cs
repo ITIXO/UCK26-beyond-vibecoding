@@ -37,19 +37,21 @@ public class WorksheetEndpointTests
     }
 
     [Test]
-    public async Task PutEntry_AsUser_UpsertsEntry()
+    public async Task PostEntry_AsUser_CreatesEntry()
     {
         await using var factory = new TestWebApplicationFactory()
             .AuthenticateAs("alice", 2, "User");
         using var client = factory.CreateClient();
 
-        var response = await client.PutAsJsonAsync("/api/worksheets/entries", new
+        var response = await client.PostAsJsonAsync("/api/worksheets/entries", new
         {
             date = "2026-05-17",
             type = "work",
-            hours = 7.5m
+            start = "08:00",
+            end = "15:30",
+            description = "Feature work"
         });
-        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
         var worksheetResponse = await client.GetAsync("/api/worksheets?year=2026&month=5");
         var worksheet = await worksheetResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -57,29 +59,94 @@ public class WorksheetEndpointTests
 
         await Assert.That(entry.GetProperty("date").GetString()).IsEqualTo("2026-05-17");
         await Assert.That(entry.GetProperty("type").GetString()).IsEqualTo("work");
+        await Assert.That(entry.GetProperty("start").GetString()).IsEqualTo("08:00:00");
+        await Assert.That(entry.GetProperty("end").GetString()).IsEqualTo("15:30:00");
+        await Assert.That(entry.GetProperty("description").GetString()).IsEqualTo("Feature work");
         await Assert.That(entry.GetProperty("hours").GetDecimal()).IsEqualTo(7.5m);
     }
 
     [Test]
-    public async Task PutEntry_ZeroHours_RemovesEntry()
+    public async Task PostEntry_AllowsMultipleEntriesPerDateAndType()
     {
         await using var factory = new TestWebApplicationFactory()
             .AuthenticateAs("alice", 2, "User");
         using var client = factory.CreateClient();
 
-        await client.PutAsJsonAsync("/api/worksheets/entries", new
+        await client.PostAsJsonAsync("/api/worksheets/entries", new
         {
             date = "2026-05-17",
-            type = "doctor",
-            hours = 2m
+            type = "work",
+            start = "08:00",
+            end = "10:00",
+            description = "Morning"
         });
 
-        var delete = await client.PutAsJsonAsync("/api/worksheets/entries", new
+        await client.PostAsJsonAsync("/api/worksheets/entries", new
+        {
+            date = "2026-05-17",
+            type = "work",
+            start = "11:00",
+            end = "12:00",
+            description = "Noon"
+        });
+
+        var worksheetResponse = await client.GetAsync("/api/worksheets?year=2026&month=5");
+        var worksheet = await worksheetResponse.Content.ReadFromJsonAsync<JsonElement>();
+        await Assert.That(worksheet.GetProperty("entries").GetArrayLength()).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task PutEntry_AsOwner_UpdatesEntry()
+    {
+        await using var factory = new TestWebApplicationFactory()
+            .AuthenticateAs("alice", 2, "User");
+        using var client = factory.CreateClient();
+
+        var create = await client.PostAsJsonAsync("/api/worksheets/entries", new
         {
             date = "2026-05-17",
             type = "doctor",
-            hours = 0m
+            start = "09:00",
+            end = "10:00",
+            description = "Checkup"
         });
+        var created = await create.Content.ReadFromJsonAsync<JsonElement>();
+        var id = created.GetProperty("id").GetInt32();
+
+        var update = await client.PutAsJsonAsync($"/api/worksheets/entries/{id}", new
+        {
+            start = "09:30",
+            end = "11:00",
+            description = "Specialist"
+        });
+        await Assert.That(update.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var updated = await update.Content.ReadFromJsonAsync<JsonElement>();
+        await Assert.That(updated.GetProperty("start").GetString()).IsEqualTo("09:30:00");
+        await Assert.That(updated.GetProperty("end").GetString()).IsEqualTo("11:00:00");
+        await Assert.That(updated.GetProperty("description").GetString()).IsEqualTo("Specialist");
+        await Assert.That(updated.GetProperty("hours").GetDecimal()).IsEqualTo(1.5m);
+    }
+
+    [Test]
+    public async Task DeleteEntry_AsOwner_RemovesEntry()
+    {
+        await using var factory = new TestWebApplicationFactory()
+            .AuthenticateAs("alice", 2, "User");
+        using var client = factory.CreateClient();
+
+        var create = await client.PostAsJsonAsync("/api/worksheets/entries", new
+        {
+            date = "2026-05-17",
+            type = "holiday",
+            start = "08:00",
+            end = "16:00",
+            description = "Vacation"
+        });
+        var created = await create.Content.ReadFromJsonAsync<JsonElement>();
+        var id = created.GetProperty("id").GetInt32();
+
+        var delete = await client.DeleteAsync($"/api/worksheets/entries/{id}");
         await Assert.That(delete.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
         var worksheetResponse = await client.GetAsync("/api/worksheets?year=2026&month=5");
