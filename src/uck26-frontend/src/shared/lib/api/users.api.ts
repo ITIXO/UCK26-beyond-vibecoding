@@ -1,23 +1,5 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "./api";
-
-export interface UserDto {
-  id: number;
-  userName: string;
-  role: string;
-  createdAt: string;
-}
-
-export interface CreateUserRequest {
-  userName: string;
-  password: string;
-  role: "Admin" | "User";
-}
-
-export interface UpdateUserRequest {
-  userName?: string;
-  role?: "Admin" | "User";
-  password?: string;
-}
+import type { CreateUserRequest, UpdateUserRequest, UserDto } from "@/shared/lib/api/users.contracts.api.ts";
 
 export const listUsers = () => apiGet<UserDto[]>("/api/users");
 

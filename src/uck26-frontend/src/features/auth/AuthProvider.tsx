@@ -1,8 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { fetchMe, login as loginApi } from "@/shared/lib/api/auth.api";
-import type { MeResponse } from "@/shared/lib/api/auth.api";
 import { getToken, setToken } from "@/shared/lib/api/api";
+import { Role } from "@/shared/lib/api/users.contracts.api.ts";
+import type { MeResponse } from "@/shared/lib/api/auth.contracts.api.ts";
 
 interface AuthContextValue {
   user: MeResponse | null;
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       isAuthenticated: user !== null,
-      isAdmin: user?.role === "Admin",
+      isAdmin: user?.role === Role.Admin,
       isLoading,
       login,
       logout,

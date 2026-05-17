@@ -4,6 +4,7 @@ import { AuthenticatedLayout, Badge } from "@itixo/component-library";
 import type { IRoute } from "@itixo/component-library";
 import { UserCog } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { Role } from "@/shared/lib/api/users.contracts.api.ts";
 
 interface Props {
   title: string;
@@ -18,12 +19,12 @@ export function AppShell({ title, children }: Props) {
     ? [
         {
           id: 1,
-          name: "UserManagement",
+          name: "Users",
           icon: <UserCog className="size-4" />,
           isActive: location.pathname === "/users",
-          agenda: "UserManagement",
+          agenda: "Users",
           path: "/users",
-          roles: ["Admin"],
+          roles: [Role.Admin],
         },
       ]
     : undefined;
@@ -36,9 +37,10 @@ export function AppShell({ title, children }: Props) {
   return (
     <AuthenticatedLayout
       userName={user?.userName ?? ""}
+      appName="UCK26"
       badges={
         user?.role ? (
-          <Badge variant={user.role === "Admin" ? "purple" : "secondary"}>{user.role}</Badge>
+          <Badge variant={user.role === Role.Admin ? "purple" : "secondary"}>{user.role}</Badge>
         ) : undefined
       }
       signOut={handleLogout}
@@ -48,7 +50,7 @@ export function AppShell({ title, children }: Props) {
       LinkComponent={Link}
     >
       <main className="mx-auto max-w-5xl px-4 py-6">
-        <h1 className="mb-4 text-2xl font-semibold">{title}</h1>
+        {title && (<h1 className="mb-4 text-2xl font-semibold">{title}</h1>)}
         {children}
       </main>
     </AuthenticatedLayout>

@@ -1,8 +1,9 @@
-import { useState } from "react";
 import type { FormEvent } from "react";
+import { useState } from "react";
 import {
   Badge,
   Button,
+  IconButton,
   Input,
   Label,
   Select,
@@ -19,8 +20,7 @@ import {
 } from "@itixo/component-library";
 import { Trash2 } from "lucide-react";
 import { useCreateUser, useDeleteUser, useUsers } from "./users.queries";
-
-type Role = "Admin" | "User";
+import { Role } from "@/shared/lib/api/users.contracts.api.ts";
 
 export function UserList() {
   const usersQuery = useUsers();
@@ -29,7 +29,7 @@ export function UserList() {
 
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<Role>("User");
+  const [role, setRole] = useState<Role>(Role.User);
   const [error, setError] = useState<string | null>(null);
 
   async function handleCreate(e: FormEvent<HTMLFormElement>) {
@@ -39,7 +39,7 @@ export function UserList() {
       await createMutation.mutateAsync({ userName, password, role });
       setUserName("");
       setPassword("");
-      setRole("User");
+      setRole(Role.User);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create user");
     }
@@ -73,22 +73,22 @@ export function UserList() {
             <Label htmlFor="newPassword">Password</Label>
             <Input
               id="newPassword"
-              type="password"
               className="h-11"
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <div className="space-y-1">
-            <Label>Role</Label>
+          <div>
+            <Label className="mb-1">Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
               <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="User">User</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value={Role.User}>User</SelectItem>
+                <SelectItem value={Role.Admin}>Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -133,18 +133,19 @@ export function UserList() {
                 <TableRow key={user.id} data-test-id={`user-row-${user.userName}`}>
                   <TableCell>{user.userName}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "Admin" ? "purple" : "secondary"}>{user.role}</Badge>
+                    <Badge variant={user.role === Role.Admin ? "purple" : "secondary"}>{user.role}</Badge>
                   </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                   <TableCell className="text-right">
-                    <Button
+                    <IconButton
                       variant="ghost"
                       size="sm"
+                      className="text-red-600 hover:text-red-600"
                       onClick={() => handleDelete(user.id)}
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}

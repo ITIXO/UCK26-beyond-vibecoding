@@ -1,16 +1,5 @@
 import { apiGet, apiPost } from "./api";
-
-export interface MeResponse {
-  id: number;
-  userName: string;
-  role: string;
-}
-
-export interface LoginResponse {
-  accessToken: string;
-  expiresInSeconds: number;
-  user: MeResponse;
-}
+import type { LoginResponse, MeResponse } from "@/shared/lib/api/auth.contracts.api.ts";
 
 export const login = (userName: string, password: string) =>
   apiPost<LoginResponse>("/api/auth/login", { userName, password });

@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 import { useAuth } from "./AuthProvider";
+import type { Role } from "@/shared/lib/api/users.contracts.api.ts";
 
 interface Props {
   children: ReactNode;
-  role?: "Admin" | "User";
+  role?: Role;
 }
 
 export function RequireAuth({ children, role }: Props) {
