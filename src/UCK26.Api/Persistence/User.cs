@@ -11,6 +11,33 @@ public class User
 
 public static class UserRoles
 {
-    public const string Admin = "admin";
-    public const string User = "user";
+    public const string Admin = "Admin";
+    public const string User = "User";
+}
+
+public class Worksheet
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public required string UserName { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public List<WorkEntry> Entries { get; set; } = [];
+}
+
+public class WorkEntry
+{
+    public int Id { get; set; }
+    public int WorksheetId { get; set; }
+    public Worksheet Worksheet { get; set; } = null!;
+    public DateOnly Date { get; set; }
+    public required string Type { get; set; }
+    public decimal Hours { get; set; }
+}
+
+public static class WorkEntryTypes
+{
+    public const string Work = "work";
+    public const string Holiday = "holiday";
+    public const string Doctor = "doctor";
 }

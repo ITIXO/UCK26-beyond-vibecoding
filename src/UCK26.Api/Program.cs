@@ -90,6 +90,7 @@ app.UseAuthorization();
 
 app.MapAuth();
 app.MapUsers();
+app.MapWorksheets();
 
 app.MapGet("/", () => Results.Ok(new { app = "UCK26.Api", status = "ok" }));
 
