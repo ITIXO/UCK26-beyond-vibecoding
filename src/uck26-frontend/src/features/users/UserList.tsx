@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import {
+  Badge,
   Button,
   Input,
   Label,
@@ -62,6 +63,7 @@ export function UserList() {
             <Label htmlFor="newUserName">User name</Label>
             <Input
               id="newUserName"
+              className="h-11"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
               required
@@ -72,6 +74,7 @@ export function UserList() {
             <Input
               id="newPassword"
               type="password"
+              className="h-11"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -80,7 +83,7 @@ export function UserList() {
           <div className="space-y-1">
             <Label>Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
@@ -89,7 +92,7 @@ export function UserList() {
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit" disabled={createMutation.isPending}>
+          <Button type="submit" className="h-11" disabled={createMutation.isPending}>
             {createMutation.isPending ? "Creating…" : "Create"}
           </Button>
         </form>
@@ -129,7 +132,9 @@ export function UserList() {
               {usersQuery.data.map((user) => (
                 <TableRow key={user.id} data-test-id={`user-row-${user.userName}`}>
                   <TableCell>{user.userName}</TableCell>
-                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.role === "Admin" ? "purple" : "secondary"}>{user.role}</Badge>
+                  </TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>
                   <TableCell className="text-right">
                     <Button

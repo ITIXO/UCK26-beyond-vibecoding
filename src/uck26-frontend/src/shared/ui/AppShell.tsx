@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { AuthenticatedLayout } from "@itixo/component-library";
+import { AuthenticatedLayout, Badge } from "@itixo/component-library";
 import type { IRoute } from "@itixo/component-library";
 import { UserCog } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
@@ -36,16 +36,16 @@ export function AppShell({ title, children }: Props) {
   return (
     <AuthenticatedLayout
       userName={user?.userName ?? ""}
+      badges={
+        user?.role ? (
+          <Badge variant={user.role === "Admin" ? "purple" : "secondary"}>{user.role}</Badge>
+        ) : undefined
+      }
       signOut={handleLogout}
       sidebarRoutes={sidebarRoutes}
       currentRoute={location.pathname}
       agendas={[]}
       LinkComponent={Link}
-      NavbarActions={
-        <span data-test-id="current-user" className="text-sm text-muted-foreground">
-          {user?.userName} · {user?.role}
-        </span>
-      }
     >
       <main className="mx-auto max-w-5xl px-4 py-6">
         <h1 className="mb-4 text-2xl font-semibold">{title}</h1>
