@@ -37,10 +37,10 @@ export function AppShell({ title, children }: Props) {
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-gray-600">
+            <span data-test-id="current-user" className="text-gray-600">
               {user?.userName} · {user?.role}
             </span>
-            <Button size="sm" variant="outline" onClick={handleLogout}>
+            <Button data-test-id="logout-button" size="sm" variant="outline" onClick={handleLogout}>
               Sign out
             </Button>
           </div>

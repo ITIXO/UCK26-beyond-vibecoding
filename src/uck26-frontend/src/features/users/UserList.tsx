@@ -100,7 +100,7 @@ export function UserList() {
         )}
       </section>
 
-      <section className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <section data-test-id="users-list-section" className="rounded-lg border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-200 px-4 py-3">
           <h2 className="text-lg font-semibold">Users</h2>
         </div>
@@ -127,7 +127,7 @@ export function UserList() {
             </TableHeader>
             <TableBody>
               {usersQuery.data.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} data-test-id={`user-row-${user.userName}`}>
                   <TableCell>{user.userName}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleString()}</TableCell>

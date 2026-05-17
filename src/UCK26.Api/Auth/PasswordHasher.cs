@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.DataProtection;
+
 namespace UCK26.Api.Auth;
 
 public interface IPasswordHasher
@@ -6,9 +8,22 @@ public interface IPasswordHasher
     bool Verify(string password, string hash);
 }
 
-public class BcryptPasswordHasher : IPasswordHasher
+public class DataProtectionPasswordHasher(IDataProtectionProvider provider) : IPasswordHasher
 {
-    public string Hash(string password) => BCrypt.Net.BCrypt.HashPassword(password);
+    private const string Purpose = "UCK26.Api.Passwords.v1";
+    private readonly IDataProtector _protector = provider.CreateProtector(Purpose);
 
-    public bool Verify(string password, string hash) => BCrypt.Net.BCrypt.Verify(password, hash);
+    public string Hash(string password) => _protector.Protect(password);
+
+    public bool Verify(string password, string hash)
+    {
+        try
+        {
+            return _protector.Unprotect(hash) == password;
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return false;
+        }
+    }
 }

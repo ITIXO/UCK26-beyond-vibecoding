@@ -10,18 +10,22 @@ Demo repo for UCK26 conference session. Minimal full-stack scaffold used live on
 - **Frontend:** React 19 + Vite + TypeScript, Tailwind v4, `@itixo/component-library`
 - **Auth:** username + password → JWT; `admin` role required for user management
 - **Storage:** single SQLite file (`uck26.db`), seeded on first run with one admin user
+- **Password protection:** ASP.NET Core Data Protection (`IDataProtectionProvider`) with keys persisted to `./dataprotection-keys` — hardcoded, no config
+- **Tests:** TUnit for backend unit + integration (`UCK26.Api.Tests`), TUnit + Playwright for UI (`UCK26.Ui.Tests`)
 
 ## Repo layout
 
 ```
 src/
 ├── UCK26.Api/                  # .NET 10 Minimal API backend
-│   ├── Auth/                   # JWT issuing, password hashing
+│   ├── Auth/                   # JWT + DataProtection password protector
 │   ├── Endpoints/              # Minimal API route groups (auth, users)
 │   ├── Persistence/            # AppDbContext, User entity, seed
 │   ├── Program.cs
 │   ├── appsettings.json
 │   └── UCK26.Api.csproj
+├── UCK26.Api.Tests/            # TUnit unit + integration tests
+├── UCK26.Ui.Tests/             # TUnit + Playwright UI tests
 └── uck26-frontend/             # React + Vite SPA
     ├── src/
     │   ├── app/                # Providers + router
@@ -46,7 +50,7 @@ Prereqs: .NET 10 SDK, Node 20+, npm.
 cd src/UCK26.Api
 dotnet run
 # API listens on http://localhost:5080
-# Swagger UI: http://localhost:5080/swagger
+# Scalar API docs: http://localhost:5080/scalar
 # On first run, SQLite file `uck26.db` is created next to the binary and seeded.
 
 # 2. Frontend (in a second terminal)
@@ -54,6 +58,12 @@ cd src/uck26-frontend
 npm install
 npm run dev
 # SPA on http://localhost:3000
+
+# 3. Backend tests
+dotnet run --project src/UCK26.Api.Tests
+
+# 4. UI tests (require both API + SPA running)
+dotnet run --project src/UCK26.Ui.Tests
 ```
 
 Default admin creds:

@@ -1,6 +1,7 @@
 # .NET
 bin/
 obj/
+**/dataprotection-keys/
 *.user
 *.suo
 *.userosscache

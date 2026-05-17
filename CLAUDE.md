@@ -91,8 +91,14 @@ Multi-step tasks → state brief plan before starting.
 - **ASP.NET Core Minimal API** — HTTP layer (route groups, not controllers, not FastEndpoints)
 - **Entity Framework Core 10** with **SQLite** — single-file persistence
 - **JWT Bearer** auth (`Microsoft.AspNetCore.Authentication.JwtBearer`)
-- **BCrypt.Net-Next** — password hashing
-- **Swashbuckle** — Swagger UI at `/swagger`
+- **ASP.NET Core Data Protection** — password protection (`IDataProtectionProvider`, keys persisted to `./dataprotection-keys`). Hardcoded purpose `UCK26.Api.Passwords.v1`. Not a one-way hash — encrypt/decrypt + compare.
+- **Scalar.AspNetCore** — Scalar API docs at `/scalar`
+
+#### Tests
+
+- **TUnit** — unit + integration runner (Microsoft.Testing.Platform)
+- **Microsoft.AspNetCore.Mvc.Testing** — `WebApplicationFactory<Program>` for backend integration tests
+- **Microsoft.Playwright** — UI tests (Chromium); auth handled by hitting `/api/auth/login` directly + injecting JWT into `localStorage` via `addInitScript`
 
 #### Frontend
 
@@ -110,7 +116,7 @@ src/
 ├── UCK26.Api/                          # Backend (.NET 10 Minimal API)
 │   ├── Auth/
 │   │   ├── JwtTokenService.cs          # Issues JWTs
-│   │   ├── PasswordHasher.cs           # BCrypt wrapper
+│   │   ├── PasswordHasher.cs           # DataProtection-based protector
 │   │   └── AuthOptions.cs              # Bound to "Jwt" section
 │   ├── Endpoints/
 │   │   ├── AuthEndpoints.cs            # /api/auth/* route group
@@ -122,6 +128,24 @@ src/
 │   ├── Program.cs                      # Composition root
 │   ├── appsettings.json
 │   └── UCK26.Api.csproj
+│
+├── UCK26.Api.Tests/                    # Backend unit + integration tests (TUnit)
+│   ├── Infrastructure/
+│   │   ├── TestAuthHandler.cs          # Replaces JWT bearer in tests; principal driven by TestAuthState
+│   │   └── TestWebApplicationFactory.cs# WebApplicationFactory<Program> with SQLite temp file + TestAuth
+│   ├── Integration/
+│   │   ├── AuthEndpointTests.cs
+│   │   └── UserEndpointTests.cs
+│   └── Unit/
+│       └── PasswordHasherTests.cs
+│
+├── UCK26.Ui.Tests/                     # UI tests (TUnit + Playwright)
+│   ├── BaseTests.cs                    # Browser bootstrap + admin auth helper
+│   ├── AuthSetup.cs                    # POST /api/auth/login → cached JWT
+│   ├── PlaywrightSetup.cs              # `playwright install chromium` on first run
+│   ├── TestConfig.cs                   # Frontend/API URLs + admin creds via env vars
+│   ├── LoginPageTests.cs
+│   └── UsersPageTests.cs
 │
 └── uck26-frontend/                     # React 19 SPA
     ├── src/
@@ -166,6 +190,17 @@ npm install
 npm run dev                   # http://localhost:3000
 npm run build
 npm run lint
+
+# Backend tests (unit + integration)
+dotnet run --project src/UCK26.Api.Tests
+
+# UI tests (require API + SPA running)
+dotnet run --project src/UCK26.Ui.Tests
+# Override targets via env vars:
+#   UCK26_FRONTEND_URL=http://localhost:3000
+#   UCK26_API_URL=http://localhost:5080
+#   UCK26_ADMIN_USER=admin
+#   UCK26_ADMIN_PASSWORD=Demo!2026
 ```
 
 ### Authentication & Authorization
@@ -174,6 +209,7 @@ npm run lint
 - Frontend POST `{ userName, password }` to `/api/auth/login`, store returned `accessToken` in `localStorage` under `uck26.token`, attach as `Authorization: Bearer <token>` on every API call.
 - **Roles:** `Admin`, `User`. Only `Admin` hit `/api/users/*`.
 - Admin account **hardcoded via seed** (`Seed:AdminUserName`, `Seed:AdminPassword` in `appsettings.json`). On first startup `DbSeeder` insert admin if absent.
+- Passwords stored as Data Protection ciphertext (not hashed). `DataProtectionPasswordHasher` creates protector with hardcoded purpose `UCK26.Api.Passwords.v1`. Keys persist to `./dataprotection-keys` (gitignored). Wipe folder → all stored passwords become unverifiable; delete `uck26.db` to reseed.
 
 ### Database
 
@@ -229,6 +265,14 @@ npm run lint
 1. Edit `src/UCK26.Api/Persistence/User.cs` (or add new entity).
 2. Update `AppDbContext` if needed.
 3. Demo: delete `uck26.db`, let `EnsureCreated()` re-make it. Migrations: `dotnet ef migrations add <Name>` then `dotnet ef database update`.
+
+### Testing conventions
+
+- TUnit for everything (unit, integration, UI). `[Test]` attribute. `await Assert.That(...).IsEqualTo(...)`.
+- Backend integration tests use `TestWebApplicationFactory` which swaps SQLite to a temp file per factory + replaces JWT auth with `TestAuthHandler` so tests set the principal directly (no real JWT round-trip needed except for the dedicated login tests).
+- UI tests bootstrap by hitting `/api/auth/login` once (HTTP), caching the JWT, then injecting it into `localStorage` via Playwright's `addInitScript` before the page loads. The dedicated `LoginPageTests` still go through the form to cover the login UX path.
+- UI elements located via `data-test-id` — **never by text, title, label, or role**. Add `data-test-id` to anything tested.
+- Every new page needs at least one Playwright test.
 
 ### Out of scope for demo
 

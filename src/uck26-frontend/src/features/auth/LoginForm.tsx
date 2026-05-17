@@ -29,6 +29,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
+      data-test-id="login-form"
       className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
     >
       <div className="space-y-1">
@@ -40,6 +41,7 @@ export function LoginForm() {
         <Label htmlFor="userName">User name</Label>
         <Input
           id="userName"
+          data-test-id="login-username"
           autoComplete="username"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
@@ -51,6 +53,7 @@ export function LoginForm() {
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
+          data-test-id="login-password"
           type="password"
           autoComplete="current-password"
           value={password}
@@ -60,12 +63,15 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div
+          data-test-id="login-error"
+          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
           {error}
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" data-test-id="login-submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
     </form>
