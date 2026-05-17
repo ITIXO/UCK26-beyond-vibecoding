@@ -21,8 +21,15 @@ public static class DbSeeder
         await db.Database.EnsureCreatedAsync(ct);
 
         var seed = seedOptions.Value;
-        if (db.Users.Any(u => u.UserName == seed.AdminUserName))
+        var admin = db.Users.FirstOrDefault(u => u.UserName == seed.AdminUserName);
+        if (admin is not null)
         {
+            if (admin.Role != UserRoles.Admin)
+            {
+                admin.Role = UserRoles.Admin;
+                await db.SaveChangesAsync(ct);
+            }
+
             return;
         }
 
