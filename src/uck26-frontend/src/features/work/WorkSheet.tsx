@@ -1,19 +1,6 @@
 import { useMemo, useState } from "react";
-import {
-  Button,
-  IconButton,
-  Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@itixo/component-library";
-import { ChevronLeft, ChevronRight, History } from "lucide-react";
+import { Button, IconButton, Input, Popover, PopoverContent, PopoverTrigger, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "@itixo/component-library";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WorkEntryType } from "@/shared/lib/api/worksheets.contracts.api";
 import { useUpsertWorkEntry, useWorksheet } from "./worksheets.queries";
 
@@ -169,7 +156,6 @@ export function WorkSheet() {
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
-                <TableHead className="w-20 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -200,11 +186,6 @@ export function WorkSheet() {
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-right">
-                    <IconButton variant="ghost" size="sm" aria-label={`History for ${day.label}`}>
-                      <History className="size-4" />
-                    </IconButton>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
