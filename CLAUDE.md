@@ -133,6 +133,8 @@ src/
 │   ├── Persistence/
 │   │   ├── AppDbContext.cs             # EF Core DbContext + seed data
 │   │   ├── User.cs                     # User, Worksheet, WorkEntry entities
+│   │   ├── AuditLog.cs                 # WorkEntry audit log entity + changed-field record
+│   │   ├── AuditInterceptor.cs         # EF interceptor writing WorkEntry audit logs
 │   │   └── Migrations/                 # EF Core migrations
 │   ├── Program.cs                      # Composition root
 │   ├── appsettings.json
@@ -171,9 +173,10 @@ src/
     │   │   ├── users/
     │   │   │   ├── UserList.tsx
     │   │   │   └── users.queries.ts
-    │   │   └── work/
-    │   │       ├── WorkSheet.tsx
-    │   │       └── worksheets.queries.ts
+│   │   └── work/
+│   │       ├── WorkSheet.tsx
+│   │       ├── WorkEntryAuditSidebar.tsx
+│   │       └── worksheets.queries.ts
     │   ├── pages/
     │   │   ├── HomePage.tsx
     │   │   ├── LoginPage.tsx
@@ -237,6 +240,7 @@ dotnet run --project src/UCK26.Ui.Tests
 - Entities: `User`, `Worksheet`, `WorkEntry`.
 - `Worksheet` unique per `{ UserId, Year, Month }`, cascades delete to entries.
 - `WorkEntry.Type`: `work`, `holiday`, `doctor`. `End` must be after `Start`.
+- `AuditLog` records `WorkEntry` mutations without FK to `WorkEntry`; `AuditInterceptor` is registered as singleton and wired through `AddInterceptors`.
 - SQLite file: `uck26.db` next to API working directory/binary depending run context. Delete file to reset.
 - Migrations live in `src/UCK26.Api/Persistence/Migrations/`; startup applies with `MigrateAsync()`.
 
@@ -301,6 +305,7 @@ dotnet run --project src/UCK26.Ui.Tests
 - Backend integration tests use `TestWebApplicationFactory`: temp SQLite file per factory + `TestAuthHandler` principal injection. Dedicated login tests use real login path.
 - UI tests hit `/api/auth/login` once, cache JWT, inject into `localStorage` through Playwright `addInitScript`. `LoginPageTests` still cover form path.
 - UI elements located via `data-test-id` — never text/title/label/role. Add `data-test-id` to anything tested.
+- Work history uses `work-history-{date}` buttons and `work-history-sidebar` for the sidebar root.
 - Every new page needs at least one Playwright test.
 
 ### Out of scope for demo

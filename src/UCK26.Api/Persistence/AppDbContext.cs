@@ -7,6 +7,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<Worksheet> Worksheets => Set<Worksheet>();
     public DbSet<WorkEntry> WorkEntries => Set<WorkEntry>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +40,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(w => w.Type).IsRequired().HasMaxLength(32);
             e.Property(w => w.Description).IsRequired().HasMaxLength(256);
             e.HasIndex(w => new { w.WorksheetId, w.Date, w.Type });
+        });
+
+        modelBuilder.Entity<AuditLog>(e =>
+        {
+            e.HasKey(a => a.Id);
+            e.Property(a => a.EntityType).IsRequired().HasMaxLength(64);
+            e.Property(a => a.Action).HasConversion<string>().IsRequired().HasMaxLength(16);
+            e.Property(a => a.PerformedBy).IsRequired().HasMaxLength(64);
+            e.Property(a => a.EntryDate).HasMaxLength(10);
+            e.HasIndex(a => new { a.WorksheetId, a.EntryDate, a.PerformedAt });
         });
     }
 }

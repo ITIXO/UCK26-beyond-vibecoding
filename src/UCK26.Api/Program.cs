@@ -18,8 +18,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=uck26.db"));
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<AuditInterceptor>();
+builder.Services.AddDbContext<AppDbContext>((sp, opt) =>
+{
+    opt.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=uck26.db");
+    opt.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+});
 
 var keysPath = Path.Combine(builder.Environment.ContentRootPath, "dataprotection-keys");
 Directory.CreateDirectory(keysPath);

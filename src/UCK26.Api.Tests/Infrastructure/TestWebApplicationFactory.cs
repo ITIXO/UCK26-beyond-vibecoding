@@ -33,8 +33,11 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>, 
                 services.Remove(d);
             }
 
-            services.AddDbContext<AppDbContext>(opt =>
-                opt.UseSqlite($"Data Source={_dbPath}"));
+            services.AddDbContext<AppDbContext>((sp, opt) =>
+            {
+                opt.UseSqlite($"Data Source={_dbPath}");
+                opt.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+            });
 
             services.AddSingleton(_authState);
 
