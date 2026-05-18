@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work Entry Audit Log — Design Handover</title>
+<style>
+  :root { color-scheme: light; --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD; --green: #0F6E56; --green-light: #E1F5EE; --red: #A32D2D; --red-light: #FCEBEB; --amber: #854F0B; --amber-light: #FAEEDA; --gray: #5F5E5A; --gray-light: #F1EFE8; --border: #D3D1C7; --text: #2C2C2A; --text-muted: #888780; --bg: #fff; --bg-secondary: #F9F8F5; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: var(--text); background: var(--bg-secondary); font-size: 14px; line-height: 1.6; }
+  a { color: var(--blue); }
+
+  /* Layout */
+  .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+  .hero { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+  .hero h1 { font-size: 22px; font-weight: 600; color: var(--text); }
+  .hero-meta { display: flex; gap: 1.5rem; margin-top: 0.75rem; font-size: 13px; color: var(--text-muted); }
+  .hero-meta span { display: flex; align-items: center; gap: 5px; }
+  .section { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .section-title .num { width: 24px; height: 24px; background: var(--blue-light); color: var(--blue); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  h3 { font-size: 14px; font-weight: 600; margin-bottom: 0.5rem; }
+  p { margin-bottom: 0.75rem; color: var(--text); }
+  code { background: var(--gray-light); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 12px; font-family: 'SF Mono', Consolas, monospace; }
+  pre { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 1rem; font-size: 12px; font-family: 'SF Mono', Consolas, monospace; overflow-x: auto; margin-bottom: 1rem; line-height: 1.5; }
+  pre .kw { color: #569cd6; }
+  pre .cls { color: #4ec9b0; }
+  pre .str { color: #ce9178; }
+  pre .cm { color: #6a9955; }
+  pre .prop { color: #9cdcfe; }
+  ul { padding-left: 1.2rem; margin-bottom: 0.75rem; }
+  li { margin-bottom: 0.25rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* Spec cards */
+  .spec-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
+  .spec-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 0.5rem; }
+  .spec-card p { font-size: 13px; margin-bottom: 0; color: var(--text-muted); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .badge-work { background: var(--blue-light); color: #0C447C; }
+  .badge-holiday { background: #EAF3DE; color: #27500A; }
+  .badge-doctor { background: var(--amber-light); color: #633806; }
+  .badge-create { background: var(--green-light); color: var(--green); }
+  .badge-update { background: var(--blue-light); color: var(--blue); }
+  .badge-delete { background: var(--red-light); color: var(--red); }
+  .badge-task { background: var(--gray-light); color: var(--gray); border: 1px solid var(--border); }
+
+  /* Interactive demo */
+  .demo-wrap { position: relative; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .demo-table-wrap { overflow-x: auto; }
+  .demo-sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 0; background: var(--bg); border-left: 1px solid var(--border); overflow: hidden; transition: width 0.25s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; z-index: 5; }
+  .demo-sidebar.open { width: 300px; }
+  .sb-head { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .sb-head-title { font-size: 13px; font-weight: 600; flex: 1; }
+  .sb-head-date { font-size: 12px; color: var(--text-muted); }
+  .sb-close { border: none; background: none; cursor: pointer; padding: 3px; border-radius: 4px; color: var(--text-muted); font-size: 18px; line-height: 1; }
+  .sb-close:hover { background: var(--bg-secondary); }
+  .sb-body { flex: 1; overflow-y: auto; padding: 12px; }
+  table.dt { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 580px; }
+  table.dt thead th { padding: 8px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); background: var(--bg-secondary); }
+  table.dt tbody tr { border-bottom: 1px solid var(--border); }
+  table.dt tbody tr:last-child { border-bottom: none; }
+  table.dt tbody tr:hover { background: #fafaf8; }
+  table.dt tbody tr.active { background: var(--blue-light); }
+  table.dt tbody td { padding: 8px 12px; vertical-align: middle; }
+  .hist-btn { border: 1px solid var(--border); background: transparent; cursor: pointer; padding: 3px 8px; border-radius: 6px; font-size: 12px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s; }
+  .hist-btn:hover { background: var(--bg-secondary); color: var(--text); }
+  .hist-btn.active { background: var(--blue-light); color: var(--blue); border-color: #B5D4F4; }
+
+  /* Timeline */
+  .tl-item { display: flex; gap: 10px; }
+  .tl-left { display: flex; flex-direction: column; align-items: center; width: 12px; flex-shrink: 0; padding-top: 4px; }
+  .tl-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid; flex-shrink: 0; }
+  .tl-dot.create { background: var(--green-light); border-color: #1D9E75; }
+  .tl-dot.update { background: var(--blue-light); border-color: var(--blue-mid); }
+  .tl-dot.delete { background: var(--red-light); border-color: #E24B4A; }
+  .tl-line { width: 1.5px; background: var(--border); flex: 1; min-height: 12px; margin-top: 3px; }
+  .tl-right { flex: 1; min-width: 0; padding-bottom: 10px; }
+  .tl-card { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; background: var(--bg-secondary); }
+  .tl-card-head { padding: 7px 10px; display: flex; align-items: center; gap: 6px; }
+  .tl-action { font-size: 12px; font-weight: 600; }
+  .tl-action.create { color: var(--green); }
+  .tl-action.update { color: var(--blue); }
+  .tl-action.delete { color: var(--red); }
+  .tl-who { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+  .tl-chev { color: var(--text-muted); transition: transform 0.18s; font-size: 13px; }
+  .tl-chev.open { transform: rotate(180deg); }
+  .tl-body { display: none; padding: 0 10px 8px; border-top: 1px solid var(--border); }
+  .tl-body.open { display: block; }
+  .tl-ts { font-size: 11px; color: var(--text-muted); padding: 5px 0 5px; }
+  .diff-row { display: flex; gap: 6px; font-size: 12px; margin-bottom: 3px; }
+  .diff-k { color: var(--text-muted); min-width: 72px; flex-shrink: 0; }
+  .diff-old { text-decoration: line-through; color: #bbb; }
+  .diff-new { color: var(--text); }
+  .diff-arr { color: #ccc; font-size: 10px; }
+  .init-row { display: flex; gap: 6px; font-size: 12px; margin-bottom: 3px; }
+  .init-k { color: var(--text-muted); min-width: 72px; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: flex-start; gap: 0; flex-wrap: wrap; }
+  .flow-node { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 0.6rem 0.9rem; font-size: 12px; text-align: center; min-width: 100px; }
+  .flow-node.blue { background: var(--blue-light); border-color: #B5D4F4; }
+  .flow-node.green { background: var(--green-light); border-color: #9FE1CB; }
+  .flow-node strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .flow-arr { padding: 0 6px; font-size: 18px; color: var(--border); align-self: center; }
+  .flow-col { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Checklist */
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .checklist li:last-child { border-bottom: none; }
+  .chk { width: 18px; height: 18px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .dep-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .dep-table th { text-align: left; padding: 6px 10px; background: var(--bg-secondary); border: 1px solid var(--border); font-weight: 500; }
+  .dep-table td { padding: 6px 10px; border: 1px solid var(--border); }
+  .pill { display: inline-block; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 99px; padding: 1px 8px; font-size: 11px; margin: 1px; }
+
+  /* data-test-id */
+  .test-id { font-family: 'SF Mono', Consolas, monospace; font-size: 11px; background: var(--gray-light); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Work Entry Audit Log — Design Handover</h1>
+    <div class="hero-meta">
+      <span>📅 May 2026</span>
+      <span>🎯 UCK26-beyond-vibecoding</span>
+      <span>📄 ADR · <a href="work-entry-audit-log.adr.md">work-entry-audit-log.adr.md</a></span>
+      <span>📋 Handover · <a href="work-entry-audit-log.handover.md">work-entry-audit-log.handover.md</a></span>
+    </div>
+    <div style="margin-top:1rem; color:var(--text-muted); font-size:13px; max-width:600px;">
+      Track every <code>WorkEntry</code> create, update, and delete via EF Core interceptor. Per-day history sidebar overlays the worksheet — visible to entry owner and admin. Deleted entries survive in audit history only.
+    </div>
+  </div>
+
+  <!-- 1. Interactive Demo -->
+  <div class="section">
+    <div class="section-title"><span class="num">1</span> Interactive prototype</div>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:1rem;">Click the history button on any day row to open the audit sidebar.</p>
+    <div class="demo-wrap">
+      <div class="demo-table-wrap">
+        <table class="dt">
+          <thead>
+            <tr><th>Date</th><th>Start</th><th>End</th><th>Work</th><th>Holiday</th><th>Doctor</th><th></th></tr>
+          </thead>
+          <tbody id="demoBody"></tbody>
+        </table>
+      </div>
+      <div class="demo-sidebar" id="demoSidebar">
+        <div class="sb-head">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+          <span class="sb-head-title">History</span>
+          <span class="sb-head-date" id="sbDate"></span>
+          <button class="sb-close" onclick="closeSb()" aria-label="Close">×</button>
+        </div>
+        <div class="sb-body"><div id="sbTimeline"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. UX Behaviour -->
+  <div class="section">
+    <div class="section-title"><span class="num">2</span> UX behaviour</div>
+    <div class="grid2">
+      <div>
+        <h3>History button</h3>
+        <ul style="font-size:13px;">
+          <li>Present on <strong>every</strong> day row, including weekends and empty days</li>
+          <li>Toggle: click opens sidebar for that date; click again closes it</li>
+          <li>Switching to a different row's button swaps sidebar content</li>
+          <li>Active row highlighted with blue background</li>
+          <li><code>data-test-id</code>: <span class="test-id">work-history-{date}</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Sidebar</h3>
+        <ul style="font-size:13px;">
+          <li>Overlays table (does not push layout)</li>
+          <li>Width: 300px, slides in from right</li>
+          <li>Events ordered descending by <code>PerformedAt</code></li>
+          <li>Latest event expanded by default, others collapsed</li>
+          <li>Only one event open at a time (accordion)</li>
+          <li>Empty state: "No history for this day"</li>
+          <li><code>data-test-id</code>: <span class="test-id">work-history-sidebar</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Timeline events</h3>
+        <ul style="font-size:13px;">
+          <li><span class="badge badge-create">✦ Created</span> — green dot, shows initial field values</li>
+          <li><span class="badge badge-update">✎ Modified</span> — blue dot, shows old → new per field</li>
+          <li><span class="badge badge-delete">✕ Deleted</span> — red dot, shows tombstone with last known value</li>
+          <li>Entry type badge per event: <span class="badge badge-work">work</span> <span class="badge badge-holiday">holiday</span> <span class="badge badge-doctor">doctor</span></li>
+          <li><code>data-test-id</code>: <span class="test-id">work-audit-event-{index}</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Deleted entries</h3>
+        <ul style="font-size:13px;">
+          <li>Not shown in main table (history-only)</li>
+          <li>Appear in timeline with red delete event</li>
+          <li>All prior events for that entry still visible above delete event</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Data flow -->
+  <div class="section">
+    <div class="section-title"><span class="num">3</span> Data flow</div>
+    <div style="overflow-x:auto; padding-bottom:0.5rem;">
+      <div class="flow" style="gap:0; align-items:center;">
+        <div class="flow-node blue"><strong>User action</strong>create / edit / delete entry</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node"><strong>WorksheetEndpoints</strong>PUT / POST / DELETE</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node"><strong>AppDbContext</strong>SaveChangesAsync()</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node blue"><strong>AuditInterceptor</strong>ISaveChangesInterceptor</div>
+        <div class="flow-arr">→</div>
+        <div class="flow-node green"><strong>AuditLog row</strong>written same transaction</div>
+      </div>
+    </div>
+    <div style="margin-top:1rem; display:flex; gap:1rem; flex-wrap:wrap;">
+      <div class="flow-node" style="flex:1; min-width:140px; text-align:left; padding:0.75rem;">
+        <strong style="font-size:12px; display:block; margin-bottom:4px;">Read path</strong>
+        <span style="font-size:12px; color:var(--text-muted);">History button → <code>GET /api/worksheets/{year}/{month}/days/{date}/audit</code> → <code>useWorkEntryAudit</code> hook → sidebar renders timeline</span>
+      </div>
+      <div class="flow-node" style="flex:1; min-width:140px; text-align:left; padding:0.75rem;">
+        <strong style="font-size:12px; display:block; margin-bottom:4px;">Authorization</strong>
+        <span style="font-size:12px; color:var(--text-muted);">Any authenticated user. Regular user sees own worksheet only. Admin passes <code>?userId=</code> to view others.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. AuditLog entity -->
+  <div class="section">
+    <div class="section-title"><span class="num">4</span> AuditLog entity</div>
+    <div class="grid2">
+      <div>
+        <pre><span class="kw">public enum</span> <span class="cls">AuditAction</span> { <span class="prop">Create</span>, <span class="prop">Update</span>, <span class="prop">Delete</span> }
+
+<span class="kw">public class</span> <span class="cls">AuditLog</span>
+{
+    <span class="kw">public int</span> <span class="prop">Id</span> { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public string</span> <span class="prop">EntityType</span> { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">"WorkEntry"</span>;
+    <span class="kw">public int</span> <span class="prop">EntityId</span> { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public</span> <span class="cls">AuditAction</span> <span class="prop">Action</span> { <span class="kw">get</span>; <span class="kw">set</span>; }
+    <span class="kw">public string</span> <span class="prop">PerformedBy</span> { <span class="kw">get</span>; <span class="kw">set</span>; } = <span class="str">""</span>;
+    <span class="kw">public</span> <span class="cls">DateTime</span> <span class="prop">PerformedAt</span> { <span class="kw">get</span>; <span class="kw">set</span>; }    <span class="cm">// UTC</span>
+    <span class="kw">public string?</span> <span class="prop">ChangedFields</span> { <span class="kw">get</span>; <span class="kw">set</span>; }  <span class="cm">// JSON</span>
+    <span class="kw">public string?</span> <span class="prop">EntryDate</span> { <span class="kw">get</span>; <span class="kw">set</span>; }      <span class="cm">// denorm</span>
+    <span class="kw">public int?</span> <span class="prop">WorksheetId</span> { <span class="kw">get</span>; <span class="kw">set</span>; }       <span class="cm">// denorm</span>
+}</pre>
+      </div>
+      <div>
+        <h3 style="margin-bottom:0.75rem;">Key decisions</h3>
+        <div class="spec-card" style="margin-bottom:0.75rem;">
+          <h4>No FK to WorkEntry</h4>
+          <p>AuditLog survives WorkEntry deletion. EntryDate + WorksheetId stored denormalized for querying.</p>
+        </div>
+        <div class="spec-card" style="margin-bottom:0.75rem;">
+          <h4>PerformedBy = username string</h4>
+          <p>Pulled from JWT <code>name</code> claim at write time. Survives user account deletion. Falls back to <code>"system"</code> when no HTTP context.</p>
+        </div>
+        <div class="spec-card">
+          <h4>ChangedFields = JSON TEXT</h4>
+          <p>Create: all initial values. Update: only modified fields (old+new). Delete: null.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. API contract -->
+  <div class="section">
+    <div class="section-title"><span class="num">5</span> API contract</div>
+    <div class="grid2">
+      <div>
+        <h3>Endpoint</h3>
+        <pre><span class="kw">GET</span> /api/worksheets/{year}/{month}/days/{date}/audit
+<span class="cm">?userId=int  (admin only)</span></pre>
+        <p style="font-size:13px;">Returns <code>200 []</code> when no worksheet exists yet (not 404).</p>
+        <h3 style="margin-top:1rem;">Response item</h3>
+        <pre>{
+  <span class="str">"entityId"</span>: 42,
+  <span class="str">"action"</span>: <span class="str">"Update"</span>,
+  <span class="str">"performedBy"</span>: <span class="str">"jan"</span>,
+  <span class="str">"performedAt"</span>: <span class="str">"2026-05-06T11:23:00Z"</span>,
+  <span class="str">"changedFields"</span>: [
+    {
+      <span class="str">"field"</span>: <span class="str">"End"</span>,
+      <span class="str">"oldValue"</span>: <span class="str">"15:30"</span>,
+      <span class="str">"newValue"</span>: <span class="str">"16:00"</span>
+    }
+  ]
+}</pre>
+      </div>
+      <div>
+        <h3>TypeScript contracts</h3>
+        <pre><span class="kw">type</span> <span class="cls">AuditAction</span> =
+  | <span class="str">'Create'</span> | <span class="str">'Update'</span> | <span class="str">'Delete'</span>;
+
+<span class="kw">interface</span> <span class="cls">AuditChangedFieldDto</span> {
+  <span class="prop">field</span>: <span class="kw">string</span>;
+  <span class="prop">oldValue</span>: <span class="kw">string</span> | <span class="kw">null</span>;
+  <span class="prop">newValue</span>: <span class="kw">string</span> | <span class="kw">null</span>;
+}
+
+<span class="kw">interface</span> <span class="cls">AuditLogEntryDto</span> {
+  <span class="prop">entityId</span>: <span class="kw">number</span>;
+  <span class="prop">action</span>: <span class="cls">AuditAction</span>;
+  <span class="prop">performedBy</span>: <span class="kw">string</span>;
+  <span class="prop">performedAt</span>: <span class="kw">string</span>; <span class="cm">// ISO 8601</span>
+  <span class="prop">changedFields</span>:
+    <span class="cls">AuditChangedFieldDto</span>[] | <span class="kw">null</span>;
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Component tree -->
+  <div class="section">
+    <div class="section-title"><span class="num">6</span> Frontend component breakdown</div>
+    <div class="grid2">
+      <div>
+        <h3>New components</h3>
+        <div class="spec-card" style="margin-bottom:0.75rem;">
+          <h4>WorkEntryAuditSidebar</h4>
+          <p><code>features/work/WorkEntryAuditSidebar.tsx</code><br>Overlay aside. Calls <code>useWorkEntryAudit</code>. Renders timeline. Accordion open/close state.</p>
+        </div>
+        <div class="spec-card">
+          <h4>useWorkEntryAudit hook</h4>
+          <p><code>features/work/worksheets.queries.ts</code><br>TanStack Query hook. Enabled only when <code>date !== null</code>. Cache key: <code>['worksheet-audit', year, month, date, userId]</code>.</p>
+        </div>
+      </div>
+      <div>
+        <h3>Modified components</h3>
+        <div class="spec-card" style="margin-bottom:0.75rem;">
+          <h4>WorkSheet.tsx</h4>
+          <p>Add <code>auditDate</code> state. Add <code>&lt;History /&gt;</code> icon button to every <code>TableRow</code>. Add extra <code>&lt;TableHead /&gt;</code>. Mount <code>&lt;WorkEntryAuditSidebar /&gt;</code>.</p>
+        </div>
+        <div class="spec-card">
+          <h4>worksheets.api.ts + contracts</h4>
+          <p>Add <code>getWorkEntryAudit()</code> fetch function. Add <code>AuditLogEntryDto</code> + <code>AuditChangedFieldDto</code> types.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Sub-issue dependency map -->
+  <div class="section">
+    <div class="section-title"><span class="num">7</span> Implementation plan &amp; parallelism</div>
+    <table class="dep-table">
+      <thead><tr><th>#</th><th>Task</th><th>Label</th><th>Blocks</th><th>Blocked by</th></tr></thead>
+      <tbody>
+        <tr><td>T1</td><td>AuditLog entity, DbSet, AddAuditLog migration</td><td><span class="badge badge-task">Task</span></td><td>T2, T3</td><td>—</td></tr>
+        <tr><td>T2</td><td>Implement AuditInterceptor</td><td><span class="badge badge-task">Task</span></td><td>T7</td><td>T1</td></tr>
+        <tr><td>T3</td><td>Add GET /{year}/{month}/days/{date}/audit endpoint</td><td><span class="badge badge-task">Task</span></td><td>T4, T7</td><td>T1</td></tr>
+        <tr><td>T4</td><td>TS contracts + useWorkEntryAudit hook</td><td><span class="badge badge-task">Task</span></td><td>T5, T6</td><td>T3</td></tr>
+        <tr><td>T5</td><td>Implement WorkEntryAuditSidebar component</td><td><span class="badge badge-task">Task</span></td><td>T8</td><td>T4</td></tr>
+        <tr><td>T6</td><td>Wire history button + sidebar into WorkSheet</td><td><span class="badge badge-task">Task</span></td><td>T8</td><td>T4</td></tr>
+        <tr><td>T7</td><td>Backend integration tests for audit endpoint</td><td><span class="badge badge-task">Task</span></td><td>T9</td><td>T2, T3</td></tr>
+        <tr><td>T8</td><td>Playwright UI tests for history sidebar</td><td><span class="badge badge-task">Task</span></td><td>T9</td><td>T5, T6</td></tr>
+        <tr><td>T9</td><td>Update docs (README, AGENTS.md, CLAUDE.md)</td><td><span class="badge badge-task">Task</span></td><td>—</td><td>T7, T8</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:0.75rem; margin-bottom:0;">T2 and T3 run in parallel after T1. T5 and T6 run in parallel after T4.</p>
+  </div>
+
+  <!-- 8. Checklist -->
+  <div class="section">
+    <div class="section-title"><span class="num">8</span> Implementation checklist</div>
+    <ul class="checklist">
+      <li><span class="chk"></span><span><code>AuditLog</code> entity + <code>AuditAction</code> enum in <code>src/UCK26.Api/Persistence/AuditLog.cs</code></span></li>
+      <li><span class="chk"></span><span><code>AppDbContext.AuditLogs</code> DbSet registered</span></li>
+      <li><span class="chk"></span><span>Migration <code>AddAuditLog</code> created — no FK to <code>WorkEntry</code></span></li>
+      <li><span class="chk"></span><span><code>AuditInterceptor</code> implements <code>ISaveChangesInterceptor</code>, registered as singleton in DI</span></li>
+      <li><span class="chk"></span><span><code>IHttpContextAccessor</code> registered; <code>PerformedBy</code> set from JWT <code>name</code> claim</span></li>
+      <li><span class="chk"></span><span><code>GET /{year}/{month}/days/{date}/audit</code> endpoint added to <code>WorksheetEndpoints.cs</code></span></li>
+      <li><span class="chk"></span><span>Ownership check: non-admin can only query own worksheet</span></li>
+      <li><span class="chk"></span><span>TS: <code>AuditLogEntryDto</code> + <code>AuditChangedFieldDto</code> in <code>worksheets.contracts.api.ts</code></span></li>
+      <li><span class="chk"></span><span>TS: <code>getWorkEntryAudit()</code> in <code>worksheets.api.ts</code></span></li>
+      <li><span class="chk"></span><span>TS: <code>useWorkEntryAudit</code> hook in <code>worksheets.queries.ts</code></span></li>
+      <li><span class="chk"></span><span><code>WorkEntryAuditSidebar</code> component with accordion timeline</span></li>
+      <li><span class="chk"></span><span><code>WorkSheet.tsx</code>: history button on every row, sidebar wired</span></li>
+      <li><span class="chk"></span><span>Backend integration tests (6 cases) in <code>WorksheetEndpointTests.cs</code></span></li>
+      <li><span class="chk"></span><span>Playwright UI tests (4 cases) in <code>WorkPageTests.cs</code></span></li>
+      <li><span class="chk"></span><span>Docs updated: README, AGENTS.md, CLAUDE.md</span></li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const days = [
+  { date:'2026-05-05', label:'Mon 05/05', s:'08:00', e:'16:00', work:'08:00', holiday:null, doctor:null },
+  { date:'2026-05-06', label:'Tue 06/05', s:'08:00', e:'17:00', work:'09:30', holiday:null, doctor:'01:00' },
+  { date:'2026-05-07', label:'Wed 07/05', s:'—', e:'—', work:null, holiday:'08:00', doctor:null },
+  { date:'2026-05-08', label:'Thu 08/05', s:'09:30', e:'16:00', work:'06:30', holiday:null, doctor:null },
+  { date:'2026-05-09', label:'Fri 09/05', s:'08:30', e:'15:30', work:'07:00', holiday:null, doctor:null },
+];
+const hist = {
+  '2026-05-05':[
+    {action:'update',type:'work',ts:'Today 11:23',who:'Jan D.',fields:[{k:'End',old:'15:30',nw:'16:00'}]},
+    {action:'create',type:'work',ts:'5 May 08:05',who:'Jan D.',init:{Start:'08:00',End:'15:30',Description:'Sprint review'}},
+  ],
+  '2026-05-06':[
+    {action:'create',type:'doctor',ts:'6 May 13:01',who:'Jan D.',init:{Start:'13:00',End:'14:00'}},
+    {action:'update',type:'work',ts:'6 May 12:40',who:'Jan D.',fields:[{k:'End',old:'17:30',nw:'17:00'}]},
+    {action:'create',type:'work',ts:'6 May 08:02',who:'admin',init:{Start:'08:00',End:'17:30'}},
+  ],
+  '2026-05-07':[
+    {action:'create',type:'holiday',ts:'7 May 07:50',who:'admin',init:{Start:'—',End:'—'}},
+  ],
+  '2026-05-08':[
+    {action:'delete',type:'work',ts:'8 May 17:01',who:'Jan D.',del:'09:30–13:00'},
+    {action:'update',type:'work',ts:'8 May 14:15',who:'Jan D.',fields:[{k:'Description',old:'',nw:'Afternoon meeting'}]},
+    {action:'create',type:'work',ts:'8 May 09:31',who:'Jan D.',init:{Start:'09:30',End:'16:00'}},
+  ],
+  '2026-05-09':[
+    {action:'create',type:'work',ts:'9 May 08:32',who:'Jan D.',init:{Start:'08:30',End:'15:30',Description:'Bug fixes'}},
+  ],
+};
+let active=null;
+function entryCell(val,type){
+  if(!val) return '<span style="color:#bbb">—</span>';
+  const colors={work:'badge-work',holiday:'badge-holiday',doctor:'badge-doctor'};
+  return `<span class="badge ${colors[type]}">${val}</span>`;
+}
+function renderTable(){
+  document.getElementById('demoBody').innerHTML=days.map(d=>`
+    <tr class="${active===d.date?'active':''}">
+      <td style="font-weight:500">${d.label}</td>
+      <td style="color:var(--text-muted)">${d.s}</td>
+      <td style="color:var(--text-muted)">${d.e}</td>
+      <td>${entryCell(d.work,'work')}</td>
+      <td>${entryCell(d.holiday,'holiday')}</td>
+      <td>${entryCell(d.doctor,'doctor')}</td>
+      <td style="text-align:right;padding-right:8px">
+        <button class="hist-btn ${active===d.date?'active':''}" onclick="openSb('${d.date}')" data-test-id="work-history-${d.date}">
+          ↺ History
+        </button>
+      </td>
+    </tr>`).join('');
+}
+function openSb(date){
+  active=date;
+  renderTable();
+  document.getElementById('sbDate').textContent=days.find(d=>d.date===date)?.label??'';
+  document.getElementById('demoSidebar').classList.add('open');
+  renderTl(hist[date]??[]);
+}
+function closeSb(){
+  active=null;
+  document.getElementById('demoSidebar').classList.remove('open');
+  renderTable();
+}
+function renderTl(events){
+  const el=document.getElementById('sbTimeline');
+  if(!events.length){el.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:2rem 0">No history for this day</p>';return;}
+  el.innerHTML=events.map((ev,i)=>{
+    const isLast=i===events.length-1;
+    const expanded=i===0;
+    const dotCls=ev.action;
+    const actLabel={create:'✦ Created',update:'✎ Modified',delete:'✕ Deleted'}[ev.action];
+    const typeBadge={work:'badge-work',holiday:'badge-holiday',doctor:'badge-doctor'}[ev.type];
+    return `<div class="tl-item">
+      <div class="tl-left"><div class="tl-dot ${dotCls}"></div>${!isLast?'<div class="tl-line"></div>':''}</div>
+      <div class="tl-right">
+        <div class="tl-card" onclick="toggleTl(this)">
+          <div class="tl-card-head">
+            <span class="tl-action ${ev.action}">${actLabel}</span>
+            <span class="badge ${typeBadge}" style="font-size:10px;padding:1px 5px">${ev.type}</span>
+            <span class="tl-who">${ev.who}</span>
+            <span class="tl-chev ${expanded?'open'}">▾</span>
+          </div>
+          <div class="tl-body ${expanded?'open':''}">
+            <div class="tl-ts">${ev.ts}</div>
+            ${renderBody(ev)}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function renderBody(ev){
+  if(ev.action==='create') return Object.entries(ev.init||{}).map(([k,v])=>`<div class="init-row"><span class="init-k">${k}</span><span>${v}</span></div>`).join('');
+  if(ev.action==='delete') return `<span style="font-size:12px;color:var(--red)">Removed: ${ev.del||'entry deleted'}</span>`;
+  return (ev.fields||[]).map(f=>`<div class="diff-row"><span class="diff-k">${f.k}</span><span class="diff-old">${f.old||'—'}</span><span class="diff-arr"> → </span><span class="diff-new">${f.nw}</span></div>`).join('');
+}
+function toggleTl(card){
+  const allCards=document.querySelectorAll('.tl-card');
+  allCards.forEach(c=>{
+    const b=c.querySelector('.tl-body');
+    const ch=c.querySelector('.tl-chev');
+    const willOpen=c===card&&!b.classList.contains('open');
+    b.classList.toggle('open',willOpen);
+    ch.classList.toggle('open',willOpen);
+  });
+}
+renderTable();
+</script>
+</body>
+</html>
