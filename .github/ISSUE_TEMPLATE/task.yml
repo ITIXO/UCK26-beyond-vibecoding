@@ -1,0 +1,26 @@
+name: Task template
+description: Task for feature
+labels: ["Task"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be done and why. Be specific — this will be picked up and implemented by an AI agent.
+      placeholder: |
+        Implement X so that Y.
+        Context: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: All criteria must pass before this task is done.
+      value: |
+        - [ ] **Test coverage** — add or update unit/integration/UI tests covering the changed behavior. Tests must pass. No new untested code paths.
+        - [ ] **Update README.md** — reflect any changed commands, setup steps, or architecture that README describes.
+        - [ ] **Update CLAUDE.md** — reflect any changed conventions, tech decisions, file structure, or agent instructions affected by this change.
+    validations:
+      required: true
