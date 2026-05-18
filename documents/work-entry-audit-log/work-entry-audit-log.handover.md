@@ -251,7 +251,7 @@ interface WorkEntryAuditSidebarProps {
 }
 ```
 
-Renders overlay aside with Tailwind `translate-x` transition. Header: history icon + date label + close button. Body: timeline from `useWorkEntryAudit`. Per event: colored dot (green=Create, blue=Update, red=Delete) + entry type badge + performer + timestamp. Collapsible — latest expanded, one open at a time. Empty state: "No history for this day." Loading state: skeleton rows.
+Renders overlay `Drawer` from itixo component library. Header: history icon + date label + close button. Body: timeline from `useWorkEntryAudit`. Per event: colored dot (green=Create, blue=Update, red=Delete) + entry type badge + performer + timestamp. Collapsible — latest expanded, one open at a time. Empty state: "No history for this day." Loading state: skeleton rows.
 
 ### 5. WorkSheet wiring — `src/uck26-frontend/src/features/work/WorkSheet.tsx`
 
