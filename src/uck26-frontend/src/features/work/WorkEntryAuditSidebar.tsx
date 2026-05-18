@@ -4,10 +4,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
   IconButton,
 } from "@itixo/component-library";
 import { History, X } from "lucide-react";
@@ -36,23 +32,26 @@ export function WorkEntryAuditSidebar({
   const auditQuery = useWorkEntryAudit(year, month, date, userId);
   const [openItem, setOpenItem] = useState("event-0");
 
+  if (!open) {
+    return null;
+  }
+
   return (
-    <Drawer open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()} direction="right">
-      <DrawerContent
-        className="fixed inset-y-0 right-0 left-auto mt-0 h-full w-full max-w-md rounded-none border-l bg-white shadow-xl transition-transform"
+      <aside
+        className="fixed inset-y-0 left-0 z-50 flex h-full w-full max-w-md translate-x-0 flex-col border-r bg-white shadow-xl transition-transform"
         data-test-id="work-history-sidebar"
       >
-        <DrawerHeader className="border-b px-5 py-4">
+        <header className="border-b px-5 py-4">
           <div className="flex items-center justify-between gap-3">
-            <DrawerTitle className="flex items-center gap-2 text-base font-semibold">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
               <History className="size-4 text-blue-600" />
               <span data-test-id="work-history-title">{dateLabel}</span>
-            </DrawerTitle>
+            </h2>
             <IconButton variant="ghost" size="mini" aria-label="Close history" onClick={onClose}>
               <X className="size-4" />
             </IconButton>
           </div>
-        </DrawerHeader>
+        </header>
 
         <div className="h-full overflow-y-auto px-5 py-4">
           {auditQuery.isLoading && (
@@ -92,8 +91,7 @@ export function WorkEntryAuditSidebar({
             </Accordion>
           )}
         </div>
-      </DrawerContent>
-    </Drawer>
+      </aside>
   );
 }
 
