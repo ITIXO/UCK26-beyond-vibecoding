@@ -71,6 +71,7 @@ Multi-step tasks -> state brief plan before starting.
 - Ensure issue and sub issues correctly linked.
 - Never create new labels.
 - Sub issue blocks another -> assign via correct relationship.
+- **Task issues must use the Task issue template** (`.github/ISSUE_TEMPLATE/task.yml`). Every Task must have a filled Description and Acceptance Criteria section. AC section must include all three mandatory checkboxes: test coverage, update README.md, update CLAUDE.md.
 
 ## Project-Specific Guidelines
 
