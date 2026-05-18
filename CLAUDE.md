@@ -61,16 +61,16 @@ Multi-step tasks -> state brief plan before starting.
 ## 6. GitHub issues
 
 - Vague issue -> ask for clarification before starting.
-- New issue -> assess size/complexity/domain, assign correct type. Types: Feature, Task, Bug.
-- New issue has sub issues -> always assign type Feature.
-- Feature must have sub issues of at least type Task to cover implementation.
+- Never create new labels.
+- New issue -> assess size/complexity/domain, assign correct type. Issue types: Feature, Task, Bug.
+- New issue has sub issues -> always assign issue type Feature.
+- Feature must have sub issues of issue type Task to cover implementation.
 - Task must have in AC's to update docs (README.md,...).
 - Task must have in AC's to update agent's instructions (CLAUDE.md,...).
 - Task must have in AC's to add tests (unit, integration, UI) if applicable.
 - Feature must have implementation plan (what to do next).
 - Design Feature sub issues for maximum parallelism.
 - Ensure issue and sub issues correctly linked.
-- Never create new labels.
 - Sub issue blocks another -> assign via correct relationship.
 - **Task issues must use the Task issue template** (`.github/ISSUE_TEMPLATE/task.yml`). Every Task must have a filled Description and Acceptance Criteria section. AC section must include all three mandatory checkboxes: test coverage, update README.md, update CLAUDE.md.
 - **All three AC checkboxes must be specific** — replace each placeholder with concrete detail. Generic text is not acceptable. If a checkbox does not apply, state why explicitly.
