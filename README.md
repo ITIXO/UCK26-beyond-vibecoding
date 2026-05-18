@@ -10,7 +10,7 @@ Demo repo for UCK26 conf session. Small full-stack app used live on stage to sho
 - **Frontend:** React 19 + Vite + TypeScript, Tailwind v4, `@itixo/component-library`.
 - **Auth:** username + password -> JWT; `Admin` role required for user management.
 - **Work tracking:** monthly worksheet per user, work/holiday/doctor entries.
-- **Storage:** SQLite file `uck26.db`; EF migrations run at API startup.
+- **Storage:** SQLite file `uck26.db`; EF migrations run at API startup. `AuditLog` records work entry changes without FK to `WorkEntry`, so history survives deletes.
 - **Password protection:** ASP.NET Core Data Protection, keys in `./dataprotection-keys`; seed admin uses special `seed:` password hash.
 - **Tests:** TUnit backend unit/integration tests; TUnit + Playwright UI tests.
 

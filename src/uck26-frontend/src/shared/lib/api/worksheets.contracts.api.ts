@@ -32,6 +32,22 @@ export interface UpdateWorkEntryRequest {
   description: string;
 }
 
+export type AuditAction = "Create" | "Update" | "Delete";
+
+export interface AuditChangedFieldDto {
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface AuditLogEntryDto {
+  entityId: number;
+  action: AuditAction;
+  performedBy: string;
+  performedAt: string;
+  changedFields: AuditChangedFieldDto[] | null;
+}
+
 export enum WorkEntryType {
   Work = "work",
   Holiday = "holiday",

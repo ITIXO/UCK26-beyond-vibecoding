@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using UCK26.Api.Persistence;
 
@@ -8,6 +9,7 @@ public record WorksheetDto(int Id, int UserId, string UserName, int Year, int Mo
 public record WorkEntryDto(int Id, DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string Description, decimal Hours);
 public record CreateWorkEntryRequest(DateOnly Date, string Type, TimeOnly Start, TimeOnly End, string? Description, int? UserId);
 public record UpdateWorkEntryRequest(TimeOnly Start, TimeOnly End, string? Description);
+public record AuditLogEntryDto(int EntityId, string Action, string PerformedBy, DateTime PerformedAt, List<AuditChangedField>? ChangedFields);
 
 public static class WorksheetEndpoints
 {
@@ -140,6 +142,55 @@ public static class WorksheetEndpoints
             return Results.NoContent();
         });
 
+        group.MapGet("/{year:int}/{month:int}/days/{date}/audit", async (
+            int year,
+            int month,
+            DateOnly date,
+            int? userId,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            CancellationToken ct) =>
+        {
+            if (!TryGetUser(principal, out var currentUserId, out var currentUserName, out var isAdmin))
+            {
+                return Results.Unauthorized();
+            }
+
+            if (!IsValidMonth(year, month) || date.Year != year || date.Month != month)
+            {
+                return Results.BadRequest(new { error = "Year, month and date are required." });
+            }
+
+            var targetUser = await GetTargetUser(db, currentUserId, currentUserName, isAdmin, userId, ct);
+            if (targetUser is null)
+            {
+                return Results.NotFound();
+            }
+
+            var worksheetId = await db.Worksheets
+                .Where(w => w.UserId == targetUser.Value.Id && w.Year == year && w.Month == month)
+                .Select(w => (int?)w.Id)
+                .FirstOrDefaultAsync(ct);
+            if (worksheetId is null)
+            {
+                return Results.Ok(Array.Empty<AuditLogEntryDto>());
+            }
+
+            var entryDate = date.ToString("yyyy-MM-dd");
+            var logs = await db.AuditLogs
+                .Where(a => a.WorksheetId == worksheetId && a.EntryDate == entryDate)
+                .OrderByDescending(a => a.PerformedAt)
+                .Select(a => new AuditLogEntryDto(
+                    a.EntityId,
+                    a.Action.ToString(),
+                    a.PerformedBy,
+                    a.PerformedAt,
+                    DeserializeChangedFields(a.ChangedFields)))
+                .ToListAsync(ct);
+
+            return Results.Ok(logs);
+        });
+
         return app;
     }
 
@@ -238,4 +289,9 @@ public static class WorksheetEndpoints
         && IsValidMonth(body.Date.Year, body.Date.Month);
 
     private static bool IsValidTimeRange(TimeOnly start, TimeOnly end) => end > start;
+
+    private static List<AuditChangedField>? DeserializeChangedFields(string? value) =>
+        value is null
+            ? null
+            : JsonSerializer.Deserialize<List<AuditChangedField>>(value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 }
