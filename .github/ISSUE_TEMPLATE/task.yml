@@ -19,8 +19,8 @@ body:
       label: Acceptance Criteria
       description: All criteria must pass before this task is done.
       value: |
-        - [ ] **Test coverage** — add or update unit/integration/UI tests covering the changed behavior. Tests must pass. No new untested code paths.
-        - [ ] **Update README.md** — reflect any changed commands, setup steps, or architecture that README describes.
-        - [ ] **Update CLAUDE.md** — reflect any changed conventions, tech decisions, file structure, or agent instructions affected by this change.
+        - [ ] **Test coverage** — [replace with specifics: which test file, which cases, what to set up, what to assert. Example: "Add integration test in `WorksheetEndpointTests.cs`: POST entry → assert `AuditLog` row with `Action=Create` and correct `PerformedBy`."] Tests must pass. No new untested code paths. If no testable behavior, state why.
+        - [ ] **Update README.md** — [replace with specifics: which section, what to add or change. Example: "Add `AuditLog` to the Database entities section."] If nothing changed that README documents, state why.
+        - [ ] **Update CLAUDE.md** — [replace with specifics: which convention, structure, or file changed and what to document. Example: "Add `AuditLog.cs` and `AuditInterceptor.cs` to solution structure map under `Persistence/`."] If nothing changed, state why.
     validations:
       required: true

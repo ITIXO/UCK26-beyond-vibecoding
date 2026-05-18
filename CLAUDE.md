@@ -61,17 +61,23 @@ Multi-step tasks -> state brief plan before starting.
 ## 6. GitHub issues
 
 - Vague issue -> ask for clarification before starting.
-- New issue -> assess size/complexity, assign correct type. Types: Feature, Task, Bug.
+- New issue -> assess size/complexity/domain, assign correct type. Types: Feature, Task, Bug.
 - New issue has sub issues -> always assign type Feature.
-- Feature must have sub issues of at least type Task.
-- Feature must have sub issue to update docs (README.md, AGENTS.md, CLAUDE.md).
-- Feature must have sub issue to add tests (unit, integration, UI) if applicable.
+- Feature must have sub issues of at least type Task to cover implementation.
+- Task must have in AC's to update docs (README.md,...).
+- Task must have in AC's to update agent's instructions (CLAUDE.md,...).
+- Task must have in AC's to add tests (unit, integration, UI) if applicable.
 - Feature must have implementation plan (what to do next).
 - Design Feature sub issues for maximum parallelism.
 - Ensure issue and sub issues correctly linked.
 - Never create new labels.
 - Sub issue blocks another -> assign via correct relationship.
 - **Task issues must use the Task issue template** (`.github/ISSUE_TEMPLATE/task.yml`). Every Task must have a filled Description and Acceptance Criteria section. AC section must include all three mandatory checkboxes: test coverage, update README.md, update CLAUDE.md.
+- **All three AC checkboxes must be specific** — replace each placeholder with concrete detail. Generic text is not acceptable. If a checkbox does not apply, state why explicitly.
+  - Test coverage: which test file, which cases, what to set up, what to assert.
+  - Update README.md: which section, what to add or change.
+  - Update CLAUDE.md: which convention, structure, or file entry to add or change.
+- **Feature issues must link all session documents** in the body: `*.adr.md`, `*.handover.md`, and `*.handover.html` from the `documents/` folder.
 
 ## Project-Specific Guidelines
 
