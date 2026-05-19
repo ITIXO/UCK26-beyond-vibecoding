@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using UCK26.Api.Persistence;
 
@@ -114,6 +115,44 @@ public static class WorksheetEndpoints
 
             await db.SaveChangesAsync(ct);
             return Results.Ok(ToDto(entry));
+        });
+
+        group.MapGet("/{year:int}/{month:int}/days/{date}/audit", async (
+            int year, int month, string date,
+            int? userId,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            CancellationToken ct) =>
+        {
+            if (!TryGetUser(principal, out var callerId, out var callerName, out var isAdmin))
+                return Results.Unauthorized();
+
+            var targetUserId = isAdmin && userId.HasValue ? userId.Value : callerId;
+
+            var worksheet = await db.Worksheets
+                .FirstOrDefaultAsync(w => w.UserId == targetUserId && w.Year == year && w.Month == month, ct);
+
+            if (worksheet is null)
+                return Results.Ok(Array.Empty<object>());
+
+            var rawLogs = await db.AuditLogs
+                .Where(a => a.WorksheetId == worksheet.Id && a.EntryDate == date)
+                .OrderByDescending(a => a.PerformedAt)
+                .ToListAsync(ct);
+
+            var logs = rawLogs.Select(a => new
+            {
+                a.EntityId,
+                Action = a.Action.ToString(),
+                a.PerformedBy,
+                a.PerformedAt,
+                a.EntryType,
+                ChangedFields = a.ChangedFields != null
+                    ? JsonSerializer.Deserialize<List<AuditChangedField>>(a.ChangedFields)
+                    : null,
+            });
+
+            return Results.Ok(logs);
         });
 
         group.MapDelete("/entries/{id:int}", async (
