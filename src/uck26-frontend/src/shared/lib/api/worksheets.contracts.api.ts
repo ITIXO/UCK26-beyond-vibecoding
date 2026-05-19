@@ -37,3 +37,20 @@ export enum WorkEntryType {
   Holiday = "holiday",
   Doctor = "doctor",
 }
+
+export type AuditAction = "Create" | "Update" | "Delete";
+
+export interface AuditChangedFieldDto {
+  field: string;
+  oldValue: string | null;
+  newValue: string | null;
+}
+
+export interface AuditLogEntryDto {
+  entityId: number;
+  action: AuditAction;
+  performedBy: string;
+  performedAt: string;
+  entryType: WorkEntryType | null;
+  changedFields: AuditChangedFieldDto[] | null;
+}
