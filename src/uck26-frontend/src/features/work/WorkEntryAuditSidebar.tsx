@@ -19,11 +19,17 @@ interface WorkEntryAuditSidebarProps {
   onClose: () => void;
 }
 
-function dotColor(action: AuditLogEntryDto["action"]): string {
-  if (action === "Create") return "bg-green-500";
-  if (action === "Update") return "bg-blue-500";
-  return "bg-red-500";
-}
+const dotFilled: Record<AuditLogEntryDto["action"], string> = {
+  Create: "bg-green-500 border-green-500",
+  Update: "bg-blue-500 border-blue-500",
+  Delete: "bg-red-500 border-red-500",
+};
+
+const dotOutline: Record<AuditLogEntryDto["action"], string> = {
+  Create: "bg-background border-green-500",
+  Update: "bg-background border-blue-500",
+  Delete: "bg-background border-red-500",
+};
 
 function FieldList({ fields, strikethrough }: {
   fields: AuditLogEntryDto["changedFields"];
@@ -65,7 +71,7 @@ function AuditEvent({ event, index, expanded, onToggle, isLast }: {
     <div className="flex gap-3" data-test-id={`work-audit-event-${index}`}>
       {/* Timeline column */}
       <div className="flex flex-col items-center w-5 shrink-0">
-        <span className={`w-3 h-3 rounded-full shrink-0 mt-3 z-10 ring-2 ring-background ${dotColor(event.action)}`} />
+        <span className={`w-3 h-3 rounded-full shrink-0 mt-3 z-10 border-2 transition-colors ${expanded ? dotFilled[event.action] : dotOutline[event.action]}`} />
         {!isLast && <div className="w-px flex-1 bg-border mt-1" />}
       </div>
 
