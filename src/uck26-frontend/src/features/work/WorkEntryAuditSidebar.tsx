@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { History, X, ChevronDown } from "lucide-react";
+import { History, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  IconButton,
 } from "@itixo/component-library";
 import { useWorkEntryAudit } from "./worksheets.queries";
 import type { AuditLogEntryDto } from "@/shared/lib/api/worksheets.contracts.api";
@@ -58,7 +57,17 @@ function AuditEvent({ event, index, expanded, onToggle }: {
 
       {expanded && (
         <div className="px-3 pb-3 pt-1 border-t bg-muted/20 text-sm">
-          {event.action === "Delete" && (
+          {event.action === "Delete" && event.changedFields && event.changedFields.length > 0 && (
+            <ul className="space-y-1">
+              {event.changedFields.map((f) => (
+                <li key={f.field} className="flex gap-2">
+                  <span className="font-medium w-24 shrink-0">{f.field}</span>
+                  <span className="text-muted-foreground line-through">{f.oldValue ?? "—"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {event.action === "Delete" && (!event.changedFields || event.changedFields.length === 0) && (
             <p className="text-muted-foreground italic">Entry removed</p>
           )}
           {event.action === "Create" && event.changedFields && event.changedFields.length > 0 && (
@@ -109,9 +118,6 @@ export function WorkEntryAuditSidebar({
         <SheetHeader className="flex flex-row items-center gap-2 pb-4 border-b">
           <History className="w-5 h-5 shrink-0" />
           <SheetTitle className="flex-1 text-base">{dateLabel}</SheetTitle>
-          <IconButton variant="ghost" size="sm" aria-label="Close" onClick={onClose}>
-            <X className="w-4 h-4" />
-          </IconButton>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-4 space-y-2">

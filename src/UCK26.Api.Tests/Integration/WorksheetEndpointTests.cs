@@ -272,7 +272,7 @@ public class WorksheetEndpointTests
         await Assert.That(deleteLog.EntryDate).IsEqualTo("2026-05-20");
         await Assert.That(deleteLog.EntryType).IsEqualTo("holiday");
         await Assert.That(deleteLog.WorksheetId).IsNotNull();
-        await Assert.That(deleteLog.ChangedFields).IsNull();
+        await Assert.That(deleteLog.ChangedFields).IsNotNull();
         await Assert.That(db.WorkEntries.Any(e => e.Id == id)).IsFalse();
     }
 
