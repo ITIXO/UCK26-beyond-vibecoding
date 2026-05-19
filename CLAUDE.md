@@ -84,7 +84,7 @@ Multi-step tasks -> state brief plan before starting.
 ### Repository
 
 - **GitHub**: [ITIXO/UCK26-beyond-vibecoding](https://github.com/ITIXO/UCK26-beyond-vibecoding)
-- Commit often. No one big commit at end.
+- IMPORTANT: Commit often. No one big commit at end.
 
 ### Project Overview
 
