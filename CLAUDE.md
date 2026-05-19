@@ -133,6 +133,8 @@ src/
 │   ├── Persistence/
 │   │   ├── AppDbContext.cs             # EF Core DbContext + seed data
 │   │   ├── User.cs                     # User, Worksheet, WorkEntry entities
+│   │   ├── AuditLog.cs                 # AuditLog entity + AuditAction enum + AuditChangedField record
+│   │   ├── AuditInterceptor.cs         # ISaveChangesInterceptor capturing WorkEntry mutations; registered as singleton
 │   │   └── Migrations/                 # EF Core migrations
 │   ├── Program.cs                      # Composition root
 │   ├── appsettings.json
