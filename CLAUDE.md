@@ -305,6 +305,7 @@ dotnet run --project src/UCK26.Ui.Tests
 - UI tests hit `/api/auth/login` once, cache JWT, inject into `localStorage` through Playwright `addInitScript`. `LoginPageTests` still cover form path.
 - UI elements located via `data-test-id` — never text/title/label/role. Add `data-test-id` to anything tested.
 - Every new page needs at least one Playwright test.
+- Audit-related `data-test-id` values: `work-history-{date}` (history button per row), `work-history-sidebar` (audit sidebar root), `work-audit-event-{index}` (each timeline event card).
 
 ### Out of scope for demo
 

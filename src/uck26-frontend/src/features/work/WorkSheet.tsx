@@ -27,7 +27,8 @@ import {
   TableRow,
   Textarea,
 } from "@itixo/component-library";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
+import { WorkEntryAuditSidebar } from "./WorkEntryAuditSidebar";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useUsers } from "@/features/users/users.queries";
 import { type WorkEntryDto, WorkEntryType } from "@/shared/lib/api/worksheets.contracts.api";
@@ -61,6 +62,7 @@ export function WorkSheet() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [pickerYear, setPickerYear] = useState(year);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [auditDate, setAuditDate] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(user?.id);
 
   const usersQuery = useUsers({ enabled: isAdmin });
@@ -227,6 +229,7 @@ export function WorkSheet() {
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -255,6 +258,17 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
+                    <TableCell>
+                      <IconButton
+                        variant="ghost"
+                        size="mini"
+                        aria-label={`Show history for ${day.label}`}
+                        data-test-id={`work-history-${day.date}`}
+                        onClick={() => setAuditDate((prev) => (prev === day.date ? null : day.date))}
+                      >
+                        <History className={auditDate === day.date ? "text-blue-500" : undefined} />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -269,6 +283,7 @@ export function WorkSheet() {
                     {formatHours(totalsByType.get(type) ?? 0)}
                   </TableCell>
                 ))}
+                <TableCell />
                 <TableCell />
               </TableRow>
             </TableBody>
@@ -289,6 +304,16 @@ export function WorkSheet() {
           }
           closeDialog();
         }}
+      />
+
+      <WorkEntryAuditSidebar
+        open={auditDate !== null}
+        date={auditDate}
+        dateLabel={days.find((d) => d.date === auditDate)?.label ?? ""}
+        userId={worksheetUserId}
+        year={year}
+        month={month}
+        onClose={() => setAuditDate(null)}
       />
     </div>
   );
