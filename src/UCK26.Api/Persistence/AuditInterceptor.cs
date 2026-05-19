@@ -15,13 +15,26 @@ public class AuditInterceptor(IHttpContextAccessor httpContextAccessor) : SaveCh
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
+    public override async ValueTask<int> SavedChangesAsync(
+        SaveChangesCompletedEventData eventData, int result,
+        CancellationToken cancellationToken = default)
+    {
+        if (eventData.Context is AppDbContext db && db.PendingBackfills.Count > 0)
+        {
+            foreach (var (entity, log) in db.PendingBackfills)
+                log.EntityId = entity.Id;
+            db.PendingBackfills.Clear();
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
     private void AttachAuditLogs(AppDbContext db)
     {
         var user = httpContextAccessor.HttpContext?.User;
         var performer = user?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Name)?.Value
             ?? user?.Identity?.Name
             ?? "system";
-        var now = DateTime.UtcNow;
 
         foreach (var entry in db.ChangeTracker.Entries<WorkEntry>().ToList())
         {
@@ -70,20 +83,25 @@ public class AuditInterceptor(IHttpContextAccessor httpContextAccessor) : SaveCh
             var worksheetId = (int?)entry.Property(nameof(WorkEntry.WorksheetId)).CurrentValue
                            ?? (int?)entry.Property(nameof(WorkEntry.WorksheetId)).OriginalValue;
 
-            db.AuditLogs.Add(new AuditLog
+            var auditLog = new AuditLog
             {
                 EntityType = "WorkEntry",
                 EntityId = entry.Entity.Id,
                 Action = action,
                 PerformedBy = performer,
-                PerformedAt = now,
+                PerformedAt = DateTime.UtcNow,
                 ChangedFields = fields is { Count: > 0 }
                     ? JsonSerializer.Serialize(fields)
                     : null,
                 EntryDate = entryDate,
                 EntryType = entryType,
                 WorksheetId = worksheetId,
-            });
+            };
+
+            db.AuditLogs.Add(auditLog);
+
+            if (action == AuditAction.Create)
+                db.PendingBackfills.Add((entry.Entity, auditLog));
         }
     }
 }

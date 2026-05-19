@@ -243,6 +243,12 @@ public class WorksheetEndpointTests
         await Assert.That(updateLog.PerformedBy).IsEqualTo("alice");
         await Assert.That(updateLog.EntryType).IsEqualTo("work");
         await Assert.That(updateLog.ChangedFields).IsNotNull();
+
+        var fields = JsonSerializer.Deserialize<List<AuditChangedField>>(updateLog.ChangedFields!);
+        await Assert.That(fields).IsNotNull();
+        await Assert.That(fields!.Any(f => f.Field == "Description" && f.OldValue == "Before" && f.NewValue == "After")).IsTrue();
+        await Assert.That(fields!.Any(f => f.Field == "Start")).IsTrue();
+        await Assert.That(fields!.Any(f => f.Field == "End")).IsTrue();
     }
 
     [Test]

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { History, ChevronDown } from "lucide-react";
 import {
   Sheet,
@@ -120,6 +120,7 @@ export function WorkEntryAuditSidebar({
 }: WorkEntryAuditSidebarProps) {
   const { data, isLoading } = useWorkEntryAudit(year, month, date, userId);
   const [expandedIndex, setExpandedIndex] = useState<number>(0);
+  useEffect(() => setExpandedIndex(0), [date]);
 
   const toggle = (i: number) => setExpandedIndex((prev) => (prev === i ? -1 : i));
 

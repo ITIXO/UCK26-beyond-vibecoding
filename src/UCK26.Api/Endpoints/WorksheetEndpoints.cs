@@ -124,7 +124,7 @@ public static class WorksheetEndpoints
             AppDbContext db,
             CancellationToken ct) =>
         {
-            if (!TryGetUser(principal, out var callerId, out var callerName, out var isAdmin))
+            if (!TryGetUser(principal, out var callerId, out _, out var isAdmin))
                 return Results.Unauthorized();
 
             var targetUserId = isAdmin && userId.HasValue ? userId.Value : callerId;

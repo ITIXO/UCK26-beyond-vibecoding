@@ -9,6 +9,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkEntry> WorkEntries => Set<WorkEntry>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    internal List<(WorkEntry Entity, AuditLog Log)> PendingBackfills { get; } = [];
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
