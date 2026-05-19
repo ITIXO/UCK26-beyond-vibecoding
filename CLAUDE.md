@@ -175,6 +175,7 @@ src/
     │   │   │   └── users.queries.ts
     │   │   └── work/
     │   │       ├── WorkSheet.tsx
+    │   │       ├── WorkEntryAuditSidebar.tsx  # Right-side Sheet overlay with accordion audit timeline
     │   │       └── worksheets.queries.ts
     │   ├── pages/
     │   │   ├── HomePage.tsx
