@@ -67,6 +67,6 @@ Single migration `AddAuditLog`. No changes to existing entities. No FK to `WorkE
 
 ## Consequences
 
-- Every `SaveChanges` incurs interceptor overhead; negligible at demo scale.
+- Every `SaveChanges` incurs interceptor overhead; negligible.
 - `ChangedFields` stored as `TEXT` in SQLite — no schema enforcement on field names; acceptable.
-- Wipe `uck26.db` resets all audit history.
+- History will be available only for new records. acceptable.
