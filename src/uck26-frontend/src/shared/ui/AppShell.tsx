@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { AuthenticatedLayout, Badge } from "@itixo/component-library";
 import type { IRoute } from "@itixo/component-library";
+import companyLogo from "@/assets/company-logo.svg";
 import { CalendarDays, UserCog } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Role } from "@/shared/lib/api/users.contracts.api.ts";
@@ -49,6 +50,7 @@ export function AppShell({ title, children }: Props) {
     <AuthenticatedLayout
       userName={user?.userName ?? ""}
       appName="UCK26"
+      companyLogo={companyLogo}
       badges={
         user?.role ? (
           <Badge variant={user.role === Role.Admin ? "purple" : "secondary"}>{user.role}</Badge>
