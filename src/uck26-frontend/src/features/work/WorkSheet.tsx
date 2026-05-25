@@ -51,7 +51,7 @@ const monthNames = [
 const entryTypes = [WorkEntryType.Work, WorkEntryType.Holiday, WorkEntryType.Doctor] as const;
 
 type DialogState =
-  | { mode: "create"; date: string; type: WorkEntryType }
+  | { mode: "create"; date: string; type: WorkEntryType, lastTime?: string }
   | { mode: "edit"; entry: WorkEntryDto };
 
 export function WorkSheet() {
@@ -249,7 +249,7 @@ export function WorkSheet() {
                           date={day.date}
                           type={type}
                           entries={dayEntries.filter((entry) => entry.type === type)}
-                          onCreate={() => setDialog({ mode: "create", date: day.date, type })}
+                          onCreate={() => setDialog({ mode: "create", date: day.date, type, lastTime: maxEnd(dayEntries, type) })}
                           onEdit={(entry) => setDialog({ mode: "edit", entry })}
                           onDelete={(entry) => deleteEntry.mutate(entry.id)}
                         />
@@ -408,12 +408,19 @@ function EntryDialog({
 }) {
   const entry = state?.mode === "edit" ? state.entry : null;
   const [start, setStart] = useState("08:00");
-  const [end, setEnd] = useState("16:00");
+  const [end, setEnd] = useState("09:00");
   const [description, setDescription] = useState("");
 
   useEffect(() => {
-    setStart(entry ? formatTime(entry.start) : "08:00");
-    setEnd(entry ? formatTime(entry.end) : "16:00");
+    let initialStart = "08:00";
+    let initialEnd = "09:00";
+    if(state?.mode=== "create" && !!state.lastTime){
+      initialStart = state.lastTime;
+      const [hours, minutes] = state.lastTime.split(":").map(Number);
+      initialEnd = `${(hours+1).toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    }
+    setStart(entry ? formatTime(entry.start) : initialStart);
+    setEnd(entry ? formatTime(entry.end) : initialEnd);
     setDescription(entry?.description ?? "");
   }, [entry, state]);
 
@@ -424,7 +431,7 @@ function EntryDialog({
 
   return (
     <Dialog open={state !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent data-test-id="work-entry-dialog">
+      <DialogContent data-test-id="work-entry-dialog" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{state?.mode === "edit" ? "Edit entry" : "Add entry"}</DialogTitle>
         </DialogHeader>
@@ -467,9 +474,10 @@ function minStart(entries: WorkEntryDto[]) {
   return formatTime(entries.map((entry) => entry.start).sort()[0]);
 }
 
-function maxEnd(entries: WorkEntryDto[]) {
+function maxEnd(entries: WorkEntryDto[], type?: WorkEntryType) {
   if (entries.length === 0) return "";
-  return formatTime(entries.map((entry) => entry.end).sort().at(-1) ?? "");
+  const filtered = type ? entries.filter((entry) => entry.type === type) : entries;
+  return formatTime(filtered.map((entry) => entry.end).sort().at(-1) ?? "");
 }
 
 function formatTime(value: string) {
