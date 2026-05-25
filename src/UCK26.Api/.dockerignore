@@ -1,0 +1,9 @@
+bin/
+obj/
+dataprotection-keys/
+*.db
+*.db-shm
+*.db-wal
+*.user
+*.log
+.DS_Store
