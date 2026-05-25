@@ -225,7 +225,7 @@ export function WorkSheet() {
               <TableRow>
                 <TableHead sticky className="w-32 bg-gray-50">Date</TableHead>
                 <TableHead sticky className="w-24 bg-gray-50">Start</TableHead>
-                <TableHead sticky className="w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]">End</TableHead>
+                <TableHead sticky className="w-24 bg-gray-50">End</TableHead>
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
@@ -243,7 +243,7 @@ export function WorkSheet() {
                     <TableCell sticky className="w-24 bg-inherit text-gray-600" data-test-id={`work-start-${day.date}`}>
                       {minStart(dayEntries)}
                     </TableCell>
-                    <TableCell sticky className="w-24 bg-inherit text-gray-600 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" data-test-id={`work-end-${day.date}`}>
+                    <TableCell sticky className="w-24 bg-inherit text-gray-600 " data-test-id={`work-end-${day.date}`}>
                       {maxEnd(dayEntries)}
                     </TableCell>
                     {entryTypes.map((type) => (
@@ -258,7 +258,7 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
-                    <TableCell sticky="right" className="w-12">
+                    <TableCell sticky="right" className="w-12 bg-inherit">
                       <IconButton
                         variant="outline"
                         size="sm"
