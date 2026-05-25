@@ -260,7 +260,7 @@ export function WorkSheet() {
                     ))}
                     <TableCell>
                       <IconButton
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         aria-label={`Show history for ${day.label}`}
                         data-test-id={`work-history-${day.date}`}
@@ -391,11 +391,12 @@ function RecordPicker({
   onSelect: (entry: WorkEntryDto) => void;
 }) {
   const Icon = action === "edit" ? Pencil : Trash2;
+  const IconClassNames= action === "edit" ? "size-3 text-blue-500 hover:text-blue-600" : "size-3 text-red-500 hover:text-red-600";
   return (
     <Popover>
       <PopoverTrigger asChild>
         <IconButton variant="ghost" size="mini" aria-label={`${action} entry`}>
-          <Icon className="size-3"/>
+          <Icon className={IconClassNames}/>
         </IconButton>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64">
