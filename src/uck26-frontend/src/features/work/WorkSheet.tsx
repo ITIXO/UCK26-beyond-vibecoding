@@ -223,13 +223,13 @@ export function WorkSheet() {
           <Table className="min-w-235">
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 z-20 w-32 bg-gray-50">Date</TableHead>
-                <TableHead className="sticky left-32 z-20 w-24 bg-gray-50">Start</TableHead>
-                <TableHead className="sticky left-56 z-20 w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]">End</TableHead>
+                <TableHead sticky className="w-32 bg-gray-50">Date</TableHead>
+                <TableHead sticky className="w-24 bg-gray-50">Start</TableHead>
+                <TableHead sticky className="w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]">End</TableHead>
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
-                <TableHead />
+                <TableHead sticky="right" className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,13 +237,13 @@ export function WorkSheet() {
                 const dayEntries = entriesByDate.get(day.date) ?? [];
                 return (
                   <TableRow key={day.date} className={day.isWeekend ? "bg-gray-50/70" : undefined} data-test-id={`work-row-${day.date}`}>
-                    <TableCell className="sticky left-0 z-10 w-32 bg-inherit font-medium">
+                    <TableCell sticky className="w-32 bg-inherit font-medium">
                       {day.label}
                     </TableCell>
-                    <TableCell className="sticky left-32 z-10 w-24 bg-inherit text-gray-600" data-test-id={`work-start-${day.date}`}>
+                    <TableCell sticky className="w-24 bg-inherit text-gray-600" data-test-id={`work-start-${day.date}`}>
                       {minStart(dayEntries)}
                     </TableCell>
-                    <TableCell className="sticky left-56 z-10 w-24 bg-inherit text-gray-600 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" data-test-id={`work-end-${day.date}`}>
+                    <TableCell sticky className="w-24 bg-inherit text-gray-600 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" data-test-id={`work-end-${day.date}`}>
                       {maxEnd(dayEntries)}
                     </TableCell>
                     {entryTypes.map((type) => (
@@ -258,7 +258,7 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
-                    <TableCell>
+                    <TableCell sticky="right" className="w-12">
                       <IconButton
                         variant="outline"
                         size="sm"
