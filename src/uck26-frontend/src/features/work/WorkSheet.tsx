@@ -261,12 +261,12 @@ export function WorkSheet() {
                     <TableCell>
                       <IconButton
                         variant="ghost"
-                        size="mini"
+                        size="sm"
                         aria-label={`Show history for ${day.label}`}
                         data-test-id={`work-history-${day.date}`}
                         onClick={() => setAuditDate((prev) => (prev === day.date ? null : day.date))}
                       >
-                        <History className={auditDate === day.date ? "text-blue-500" : undefined} />
+                        <History className="text-green-700"/>
                       </IconButton>
                     </TableCell>
                   </TableRow>
