@@ -220,16 +220,16 @@ export function WorkSheet() {
         )}
 
         {worksheetQuery.data && (
-          <Table className="min-w-235">
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead sticky className="w-32 bg-gray-50">Date</TableHead>
-                <TableHead sticky className="w-24 bg-gray-50">Start</TableHead>
-                <TableHead sticky className="w-24 bg-gray-50">End</TableHead>
+                <TableHead className="w-32 bg-gray-50" sticky >Date</TableHead>
+                <TableHead className="w-24 bg-gray-50" sticky >Start</TableHead>
+                <TableHead className="w-24 bg-gray-50" sticky >End</TableHead>
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
-                <TableHead sticky="right" className="w-12" />
+                <TableHead className="w-12" sticky="right"/>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,7 +258,7 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
-                    <TableCell sticky="right" className="w-12 bg-inherit">
+                    <TableCell className="w-12 bg-inherit" sticky="right">
                       <IconButton
                         variant="outline"
                         size="sm"
