@@ -6,5 +6,5 @@ public class JwtOptions
     public string Issuer { get; set; } = "uck26";
     public string Audience { get; set; } = "uck26-spa";
     public string SigningKey { get; set; } = "";
-    public int ExpiresMinutes { get; set; } = 60;
+    public int ExpiresMinutes { get; set; } = 60 * 24 * 3; // 3 days
 }
