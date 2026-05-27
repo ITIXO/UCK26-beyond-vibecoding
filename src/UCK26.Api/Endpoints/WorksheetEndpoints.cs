@@ -138,6 +138,7 @@ public static class WorksheetEndpoints
             var rawLogs = await db.AuditLogs
                 .Where(a => a.WorksheetId == worksheet.Id && a.EntryDate == date)
                 .OrderByDescending(a => a.PerformedAt)
+                .ThenByDescending(a => a.Id)
                 .ToListAsync(ct);
 
             var logs = rawLogs.Select(a => new
@@ -147,9 +148,7 @@ public static class WorksheetEndpoints
                 a.PerformedBy,
                 a.PerformedAt,
                 a.EntryType,
-                ChangedFields = a.ChangedFields != null
-                    ? JsonSerializer.Deserialize<List<AuditChangedField>>(a.ChangedFields)
-                    : null,
+                ChangedFields = ParseChangedFields(a.ChangedFields),
             });
 
             return Results.Ok(logs);
@@ -275,6 +274,21 @@ public static class WorksheetEndpoints
         body.Type is WorkEntryTypes.Work or WorkEntryTypes.Holiday or WorkEntryTypes.Doctor
         && IsValidTimeRange(body.Start, body.End)
         && IsValidMonth(body.Date.Year, body.Date.Month);
+
+    private static List<AuditChangedField>? ParseChangedFields(string? changedFields)
+    {
+        if (changedFields is null)
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<AuditChangedField>>(changedFields);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     private static bool IsValidTimeRange(TimeOnly start, TimeOnly end) => end > start;
 }

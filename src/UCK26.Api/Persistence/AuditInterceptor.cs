@@ -67,14 +67,6 @@ public class AuditInterceptor(IHttpContextAccessor httpContextAccessor) : SaveCh
                         p.CurrentValue?.ToString()))
                     .ToList();
             }
-            else if (action == AuditAction.Delete)
-            {
-                fields = entry.Properties
-                    .Where(p => p.Metadata.Name is not "Id")
-                    .Select(p => new AuditChangedField(p.Metadata.Name, p.OriginalValue?.ToString(), null))
-                    .ToList();
-            }
-
             var rawDate = entry.Property(nameof(WorkEntry.Date)).CurrentValue
                        ?? entry.Property(nameof(WorkEntry.Date)).OriginalValue;
             var entryDate = rawDate is DateOnly d ? d.ToString("yyyy-MM-dd") : rawDate?.ToString();

@@ -278,7 +278,7 @@ public class WorksheetEndpointTests
         await Assert.That(deleteLog.EntryDate).IsEqualTo("2026-05-20");
         await Assert.That(deleteLog.EntryType).IsEqualTo("holiday");
         await Assert.That(deleteLog.WorksheetId).IsNotNull();
-        await Assert.That(deleteLog.ChangedFields).IsNotNull();
+        await Assert.That(deleteLog.ChangedFields).IsNull();
         await Assert.That(db.WorkEntries.Any(e => e.Id == id)).IsFalse();
     }
 
@@ -348,6 +348,15 @@ public class WorksheetEndpointTests
             description = "Updated"
         });
 
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var sameTime = DateTime.UtcNow;
+            foreach (var log in db.AuditLogs)
+                log.PerformedAt = sameTime;
+            await db.SaveChangesAsync();
+        }
+
         var response = await client.GetAsync("/api/worksheets/2026/5/days/2026-05-17/audit");
         var logs = await response.Content.ReadFromJsonAsync<JsonElement>();
 
@@ -356,6 +365,37 @@ public class WorksheetEndpointTests
         await Assert.That(logs[0].GetProperty("entryType").GetString()).IsEqualTo("work");
         await Assert.That(logs[0].GetProperty("changedFields").GetArrayLength()).IsGreaterThan(0);
         await Assert.That(logs[1].GetProperty("action").GetString()).IsEqualTo("Create");
+    }
+
+    [Test]
+    public async Task GetAudit_WithInvalidChangedFields_ReturnsNullChangedFields()
+    {
+        await using var factory = new TestWebApplicationFactory()
+            .AuthenticateAs("alice", 2, "User");
+        using var client = factory.CreateClient();
+
+        await client.PostAsJsonAsync("/api/worksheets/entries", new
+        {
+            date = "2026-05-17",
+            type = "work",
+            start = "08:00",
+            end = "16:00",
+            description = "Day"
+        });
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var log = db.AuditLogs.Single();
+            log.ChangedFields = "not json";
+            await db.SaveChangesAsync();
+        }
+
+        var response = await client.GetAsync("/api/worksheets/2026/5/days/2026-05-17/audit");
+        await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+        var logs = await response.Content.ReadFromJsonAsync<JsonElement>();
+        await Assert.That(logs[0].GetProperty("changedFields").ValueKind).IsEqualTo(JsonValueKind.Null);
     }
 
     [Test]
