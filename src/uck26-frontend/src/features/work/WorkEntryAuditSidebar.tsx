@@ -100,7 +100,9 @@ function AuditEvent({ event, index, expanded, onToggle, isLast }: {
               <FieldList fields={event.changedFields} />
             )}
             {event.action === "Delete" && (
-              <FieldList fields={event.changedFields} strikethrough />
+              <p className="text-sm text-muted-foreground pt-2 border-t mt-2" data-test-id={`work-audit-delete-${index}`}>
+                Entry removed
+              </p>
             )}
           </div>
         )}
@@ -142,7 +144,9 @@ export function WorkEntryAuditSidebar({
           )}
 
           {!isLoading && (!data || data.length === 0) && (
-            <p className="text-sm text-muted-foreground text-center py-8">No history for this day.</p>
+            <p className="text-sm text-muted-foreground text-center py-8" data-test-id="work-history-empty">
+              No history for this day.
+            </p>
           )}
 
           {!isLoading && data && data.length > 0 && data.map((event, i) => (

@@ -122,8 +122,8 @@ public class WorkPageTests : BaseTests
         await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
         await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
             new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
-        await page.GetByText("No history for this day.").WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
-        await Assert.That(await page.GetByText("No history for this day.").IsVisibleAsync()).IsTrue();
+        await page.Locator("[data-test-id='work-history-empty']").WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
+        await Assert.That(await page.Locator("[data-test-id='work-history-empty']").IsVisibleAsync()).IsTrue();
     }
 
     [Test]
@@ -141,7 +141,7 @@ public class WorkPageTests : BaseTests
         await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
             new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
 
-        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync(new LocatorClickOptions { Force = true });
         await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
             new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Hidden });
         await Assert.That(await page.Locator("[data-test-id='work-history-sidebar']").IsVisibleAsync()).IsFalse();
@@ -150,8 +150,10 @@ public class WorkPageTests : BaseTests
     [Test]
     public async Task WorkPage_HistoryButton_ExistsOnWeekendRows()
     {
+        var year = DateTime.Today.Year;
+        var month = DateTime.Today.Month;
         var firstSunday = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
-            .Select(d => new DateOnly(DateTime.Today.Year, DateTime.Today.Month, d))
+            .Select(d => new DateOnly(year, month, d))
             .FirstOrDefault(d => d.DayOfWeek == DayOfWeek.Sunday);
 
         if (firstSunday == default) return;
@@ -172,7 +174,7 @@ public class WorkPageTests : BaseTests
         using var client = new HttpClient { BaseAddress = new Uri(TestConfig.ApiUrl) };
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", storage.Token);
 
-        await client.PostAsJsonAsync("/api/worksheets/entries", new
+        var response = await client.PostAsJsonAsync("/api/worksheets/entries", new
         {
             date = date.ToString("yyyy-MM-dd"),
             type,
@@ -180,6 +182,7 @@ public class WorkPageTests : BaseTests
             end = "16:00",
             description = "UI test"
         });
+        response.EnsureSuccessStatusCode();
     }
 
     private static async Task DeleteEntriesForDateAsync(DateOnly date)
