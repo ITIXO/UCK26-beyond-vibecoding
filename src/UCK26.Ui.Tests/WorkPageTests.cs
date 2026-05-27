@@ -150,7 +150,7 @@ public class WorkPageTests : BaseTests
     [Test]
     public async Task WorkPage_HistoryButton_ExistsOnWeekendRows()
     {
-        var firstSunday = Enumerable.Range(1, 31)
+        var firstSunday = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
             .Select(d => new DateOnly(DateTime.Today.Year, DateTime.Today.Month, d))
             .FirstOrDefault(d => d.DayOfWeek == DayOfWeek.Sunday);
 
