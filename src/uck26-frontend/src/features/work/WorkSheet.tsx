@@ -27,7 +27,8 @@ import {
   TableRow,
   Textarea,
 } from "@itixo/component-library";
-import { ChevronLeft, ChevronRight, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Pencil, Plus, Trash2 } from "lucide-react";
+import { WorkEntryAuditSidebar } from "./WorkEntryAuditSidebar";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useUsers } from "@/features/users/users.queries";
 import { type WorkEntryDto, WorkEntryType } from "@/shared/lib/api/worksheets.contracts.api";
@@ -61,6 +62,7 @@ export function WorkSheet() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [pickerYear, setPickerYear] = useState(year);
   const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [auditDate, setAuditDate] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>(user?.id);
 
   const usersQuery = useUsers({ enabled: isAdmin });
@@ -218,29 +220,30 @@ export function WorkSheet() {
         )}
 
         {worksheetQuery.data && (
-          <Table className="min-w-235">
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 z-20 w-32 bg-gray-50">Date</TableHead>
-                <TableHead className="sticky left-32 z-20 w-24 bg-gray-50">Start</TableHead>
-                <TableHead className="sticky left-56 z-20 w-24 bg-gray-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]">End</TableHead>
+                <TableHead className="w-32" sticky >Date</TableHead>
+                <TableHead className="w-24" sticky >Start</TableHead>
+                <TableHead className="w-24" sticky >End</TableHead>
                 <TableHead>Work</TableHead>
                 <TableHead>Holiday</TableHead>
                 <TableHead>Doctor</TableHead>
+                <TableHead className="w-12" sticky="right"/>
               </TableRow>
             </TableHeader>
             <TableBody>
               {days.map((day) => {
                 const dayEntries = entriesByDate.get(day.date) ?? [];
                 return (
-                  <TableRow key={day.date} className={day.isWeekend ? "bg-gray-50/70" : undefined} data-test-id={`work-row-${day.date}`}>
-                    <TableCell className="sticky left-0 z-10 w-32 bg-inherit font-medium">
+                  <TableRow key={day.date} className={day.isWeekend ? "bg-gray-50" : undefined} data-test-id={`work-row-${day.date}`}>
+                    <TableCell sticky className={`w-32 font-medium ${day.isWeekend ? "bg-gray-50" : undefined}`}>
                       {day.label}
                     </TableCell>
-                    <TableCell className="sticky left-32 z-10 w-24 bg-inherit text-gray-600" data-test-id={`work-start-${day.date}`}>
+                    <TableCell sticky className={`w-24 text-gray-600 ${day.isWeekend ? "bg-gray-50" : undefined}`} data-test-id={`work-start-${day.date}`}>
                       {minStart(dayEntries)}
                     </TableCell>
-                    <TableCell className="sticky left-56 z-10 w-24 bg-inherit text-gray-600 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" data-test-id={`work-end-${day.date}`}>
+                    <TableCell sticky className={`w-24 text-gray-600 ${day.isWeekend ? "bg-gray-50" : undefined}`} data-test-id={`work-end-${day.date}`}>
                       {maxEnd(dayEntries)}
                     </TableCell>
                     {entryTypes.map((type) => (
@@ -255,15 +258,26 @@ export function WorkSheet() {
                         />
                       </TableCell>
                     ))}
+                    <TableCell className={`w-12 font-medium ${day.isWeekend ? "bg-gray-50" : undefined}`} sticky="right">
+                      <IconButton
+                        variant="outline"
+                        size="sm"
+                        aria-label={`Show history for ${day.label}`}
+                        data-test-id={`work-history-${day.date}`}
+                        onClick={() => setAuditDate((prev) => (prev === day.date ? null : day.date))}
+                      >
+                        <History className="text-green-700"/>
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 );
               })}
               <TableRow className="bg-blue-50 font-medium" data-test-id="work-summary-row">
-                <TableCell className="sticky left-0 z-10 w-32 bg-blue-50">
+                <TableCell className="w-32 bg-blue-50" sticky>
                   Summary
                 </TableCell>
-                <TableCell className="sticky left-32 z-10 w-24 bg-blue-50" />
-                <TableCell className="sticky left-56 z-10 w-24 bg-blue-50 shadow-[8px_0_16px_rgba(15,23,42,0.08)]" />
+                <TableCell className="w-24 bg-blue-50" sticky/>
+                <TableCell className="w-24 bg-blue-50" sticky/>
                 {entryTypes.map((type) => (
                   <TableCell key={type} className="tabular-nums font-bold" data-test-id={`work-summary-${type}`}>
                     {formatHours(totalsByType.get(type) ?? 0)}
@@ -289,6 +303,16 @@ export function WorkSheet() {
           }
           closeDialog();
         }}
+      />
+
+      <WorkEntryAuditSidebar
+        open={auditDate !== null}
+        date={auditDate}
+        dateLabel={days.find((d) => d.date === auditDate)?.label ?? ""}
+        userId={worksheetUserId}
+        year={year}
+        month={month}
+        onClose={() => setAuditDate(null)}
       />
     </div>
   );
@@ -366,11 +390,12 @@ function RecordPicker({
   onSelect: (entry: WorkEntryDto) => void;
 }) {
   const Icon = action === "edit" ? Pencil : Trash2;
+  const IconClassNames= action === "edit" ? "size-3 text-blue-500 hover:text-blue-600" : "size-3 text-red-500 hover:text-red-600";
   return (
     <Popover>
       <PopoverTrigger asChild>
         <IconButton variant="ghost" size="mini" aria-label={`${action} entry`}>
-          <Icon className="size-3"/>
+          <Icon className={IconClassNames}/>
         </IconButton>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64">

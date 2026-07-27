@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using UCK26.Api.Persistence;
 
@@ -114,6 +115,43 @@ public static class WorksheetEndpoints
 
             await db.SaveChangesAsync(ct);
             return Results.Ok(ToDto(entry));
+        });
+
+        group.MapGet("/{year:int}/{month:int}/days/{date}/audit", async (
+            int year, int month, string date,
+            int? userId,
+            ClaimsPrincipal principal,
+            AppDbContext db,
+            CancellationToken ct) =>
+        {
+            if (!TryGetUser(principal, out var callerId, out _, out var isAdmin))
+                return Results.Unauthorized();
+
+            var targetUserId = isAdmin && userId.HasValue ? userId.Value : callerId;
+
+            var worksheet = await db.Worksheets
+                .FirstOrDefaultAsync(w => w.UserId == targetUserId && w.Year == year && w.Month == month, ct);
+
+            if (worksheet is null)
+                return Results.Ok(Array.Empty<object>());
+
+            var rawLogs = await db.AuditLogs
+                .Where(a => a.WorksheetId == worksheet.Id && a.EntryDate == date)
+                .OrderByDescending(a => a.PerformedAt)
+                .ThenByDescending(a => a.Id)
+                .ToListAsync(ct);
+
+            var logs = rawLogs.Select(a => new
+            {
+                a.EntityId,
+                Action = a.Action.ToString(),
+                a.PerformedBy,
+                a.PerformedAt,
+                a.EntryType,
+                ChangedFields = ParseChangedFields(a.ChangedFields),
+            });
+
+            return Results.Ok(logs);
         });
 
         group.MapDelete("/entries/{id:int}", async (
@@ -236,6 +274,21 @@ public static class WorksheetEndpoints
         body.Type is WorkEntryTypes.Work or WorkEntryTypes.Holiday or WorkEntryTypes.Doctor
         && IsValidTimeRange(body.Start, body.End)
         && IsValidMonth(body.Date.Year, body.Date.Month);
+
+    private static List<AuditChangedField>? ParseChangedFields(string? changedFields)
+    {
+        if (changedFields is null)
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<AuditChangedField>>(changedFields);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 
     private static bool IsValidTimeRange(TimeOnly start, TimeOnly end) => end > start;
 }

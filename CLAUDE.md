@@ -133,6 +133,8 @@ src/
 │   ├── Persistence/
 │   │   ├── AppDbContext.cs             # EF Core DbContext + seed data
 │   │   ├── User.cs                     # User, Worksheet, WorkEntry entities
+│   │   ├── AuditLog.cs                 # AuditLog entity + AuditAction enum + AuditChangedField record
+│   │   ├── AuditInterceptor.cs         # ISaveChangesInterceptor capturing WorkEntry mutations; registered as singleton
 │   │   └── Migrations/                 # EF Core migrations
 │   ├── Program.cs                      # Composition root
 │   ├── appsettings.json
@@ -173,6 +175,7 @@ src/
     │   │   │   └── users.queries.ts
     │   │   └── work/
     │   │       ├── WorkSheet.tsx
+    │   │       ├── WorkEntryAuditSidebar.tsx  # Right-side Sheet overlay with accordion audit timeline
     │   │       └── worksheets.queries.ts
     │   ├── pages/
     │   │   ├── HomePage.tsx
@@ -302,6 +305,7 @@ dotnet run --project src/UCK26.Ui.Tests
 - UI tests hit `/api/auth/login` once, cache JWT, inject into `localStorage` through Playwright `addInitScript`. `LoginPageTests` still cover form path.
 - UI elements located via `data-test-id` — never text/title/label/role. Add `data-test-id` to anything tested.
 - Every new page needs at least one Playwright test.
+- Audit-related `data-test-id` values: `work-history-{date}` (history button per row), `work-history-sidebar` (audit sidebar root), `work-audit-event-{index}` (each timeline event card).
 
 ### Out of scope for demo
 

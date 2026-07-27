@@ -9,7 +9,7 @@ Demo repo for UCK26 conf session. Small full-stack app used live on stage to sho
 - **Backend:** .NET 10 Minimal API, EF Core 10 + SQLite, JWT bearer auth.
 - **Frontend:** React 19 + Vite + TypeScript, Tailwind v4, `@itixo/component-library`.
 - **Auth:** username + password -> JWT; `Admin` role required for user management.
-- **Work tracking:** monthly worksheet per user, work/holiday/doctor entries.
+- **Work tracking:** monthly worksheet per user, work/holiday/doctor entries. Mutations captured in audit log.
 - **Storage:** SQLite file `uck26.db`; EF migrations run at API startup.
 - **Password protection:** ASP.NET Core Data Protection, keys in `./dataprotection-keys`; seed admin uses special `seed:` password hash.
 - **Tests:** TUnit backend unit/integration tests; TUnit + Playwright UI tests.
@@ -96,6 +96,7 @@ Default admin creds:
 | POST   | `/api/worksheets/entries`    | Any logged-in | Create work/holiday/doctor entry      |
 | PUT    | `/api/worksheets/entries/{id}` | Owner/Admin  | Update entry time + description       |
 | DELETE | `/api/worksheets/entries/{id}` | Owner/Admin  | Delete entry                          |
+| GET    | `/api/worksheets/{year}/{month}/days/{date}/audit` | Any logged-in | Audit log for a day; admin can pass `?userId` |
 
 ## Configuration
 
@@ -117,6 +118,13 @@ Default admin creds:
 ```
 
 Frontend reads `VITE_API_URL` from `.env.local`; `.env.example` points at `http://localhost:5080`.
+
+## Database entities
+
+- `User` — login account with role (`Admin` / `User`)
+- `Worksheet` — unique per `{ UserId, Year, Month }`; cascades delete to entries
+- `WorkEntry` — single time-block on a day; type `work` / `holiday` / `doctor`
+- `AuditLog` — immutable mutation record for each `WorkEntry` change; **no FK to `WorkEntry`** by design so history survives entry deletion
 
 ## Reset data
 

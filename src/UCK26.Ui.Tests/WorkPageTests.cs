@@ -67,6 +67,124 @@ public class WorkPageTests : BaseTests
         await Assert.That(page.Url).Contains("/login");
     }
 
+    // Audit sidebar tests (#6 and #7)
+
+    [Test]
+    public async Task WorkPage_HistoryButton_OpensSidebar()
+    {
+        var date = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 10);
+        var key = date.ToString("yyyy-MM-dd");
+
+        await using var context = await CreateAuthenticatedAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(TestConfig.Route("/work"));
+        await page.Locator("[data-test-id='work-sheet']").WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
+        await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
+        await Assert.That(await page.Locator("[data-test-id='work-history-sidebar']").IsVisibleAsync()).IsTrue();
+    }
+
+    [Test]
+    public async Task WorkPage_HistoryButton_ShowsAuditEventAfterEntryCreated()
+    {
+        var date = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 11);
+        await DeleteEntriesForDateAsync(date);
+        await CreateEntryForDateAsync(date, "work");
+
+        var key = date.ToString("yyyy-MM-dd");
+
+        await using var context = await CreateAuthenticatedAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(TestConfig.Route("/work"));
+        await page.Locator("[data-test-id='work-sheet']").WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
+        await page.Locator("[data-test-id='work-audit-event-0']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
+        await Assert.That(await page.Locator("[data-test-id='work-audit-event-0']").IsVisibleAsync()).IsTrue();
+    }
+
+    [Test]
+    public async Task WorkPage_HistoryButton_NoEntries_ShowsEmptyMessage()
+    {
+        var date = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 12);
+        await DeleteEntriesForDateAsync(date);
+
+        var key = date.ToString("yyyy-MM-dd");
+
+        await using var context = await CreateAuthenticatedAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(TestConfig.Route("/work"));
+        await page.Locator("[data-test-id='work-sheet']").WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
+        await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
+        await page.Locator("[data-test-id='work-history-empty']").WaitForAsync(new LocatorWaitForOptions { Timeout = 5_000 });
+        await Assert.That(await page.Locator("[data-test-id='work-history-empty']").IsVisibleAsync()).IsTrue();
+    }
+
+    [Test]
+    public async Task WorkPage_HistoryButton_ClickSameButton_ClosesSidebar()
+    {
+        var date = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 13);
+        var key = date.ToString("yyyy-MM-dd");
+
+        await using var context = await CreateAuthenticatedAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(TestConfig.Route("/work"));
+        await page.Locator("[data-test-id='work-sheet']").WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync();
+        await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Visible });
+
+        await page.Locator($"[data-test-id='work-history-{key}']").ClickAsync(new LocatorClickOptions { Force = true });
+        await page.Locator("[data-test-id='work-history-sidebar']").WaitForAsync(
+            new LocatorWaitForOptions { Timeout = 5_000, State = WaitForSelectorState.Hidden });
+        await Assert.That(await page.Locator("[data-test-id='work-history-sidebar']").IsVisibleAsync()).IsFalse();
+    }
+
+    [Test]
+    public async Task WorkPage_HistoryButton_ExistsOnWeekendRows()
+    {
+        var year = DateTime.Today.Year;
+        var month = DateTime.Today.Month;
+        var firstSunday = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
+            .Select(d => new DateOnly(year, month, d))
+            .FirstOrDefault(d => d.DayOfWeek == DayOfWeek.Sunday);
+
+        if (firstSunday == default) return;
+
+        var key = firstSunday.ToString("yyyy-MM-dd");
+
+        await using var context = await CreateAuthenticatedAdminContextAsync();
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(TestConfig.Route("/work"));
+        await page.Locator("[data-test-id='work-sheet']").WaitForAsync(new LocatorWaitForOptions { Timeout = 10_000 });
+
+        await Assert.That(await page.Locator($"[data-test-id='work-history-{key}']").IsVisibleAsync()).IsTrue();
+    }
+
+    private static async Task CreateEntryForDateAsync(DateOnly date, string type)
+    {
+        var storage = await AuthSetup.GetAdminStorageStateAsync();
+        using var client = new HttpClient { BaseAddress = new Uri(TestConfig.ApiUrl) };
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", storage.Token);
+
+        var response = await client.PostAsJsonAsync("/api/worksheets/entries", new
+        {
+            date = date.ToString("yyyy-MM-dd"),
+            type,
+            start = "08:00",
+            end = "16:00",
+            description = "UI test"
+        });
+        response.EnsureSuccessStatusCode();
+    }
+
     private static async Task DeleteEntriesForDateAsync(DateOnly date)
     {
         var storage = await AuthSetup.GetAdminStorageStateAsync();
